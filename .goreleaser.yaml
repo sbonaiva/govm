@@ -23,7 +23,7 @@ builds:
       - darwin
 
 archives:
-  - format: [ 'tar.gz' ]
+  - formats: [ 'tar.gz' ]
 
 snapshot:
   version_template: "{{ .Env.VERSION }}"

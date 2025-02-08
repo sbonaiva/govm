@@ -1,6 +1,6 @@
 module github.com/sbonaiva/govm
 
-go 1.23.5
+go 1.23.6
 
 require (
 	github.com/briandowns/spinner v1.23.2

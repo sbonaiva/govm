@@ -13,7 +13,8 @@ before:
     - go mod tidy
 
 builds:
-  - binary: govm
+  - main: ./cmd/govm
+    binary: govm
     ldflags: "-s -w -X main.Version={{.Env.VERSION}}"
     env:
       - CGO_ENABLED=0

@@ -104,7 +104,7 @@ func (r *install) downloadVersion(ctx context.Context, install *domain.Install) 
 }
 
 func (r *install) removePreviousVersion(ctx context.Context, install *domain.Install) error {
-	if err := os.RemoveAll(install.HomeGovmDir()); err != nil && !os.IsNotExist(err) {
+	if err := os.RemoveAll(install.HomeGoDir()); err != nil && !os.IsNotExist(err) {
 		slog.ErrorContext(ctx, "Removing previous version", slog.String("Install", "removePreviousVersion"), slog.String("error", err.Error()))
 		return domain.ErrUnexpected
 	}

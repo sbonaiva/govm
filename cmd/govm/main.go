@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/sbonaiva/govm/internal/api"
+	"github.com/sbonaiva/govm/internal/util"
 	"github.com/spf13/cobra"
 )
 
@@ -31,6 +32,6 @@ func main() {
 	)
 
 	if err := rootCmd.Execute(); err != nil {
-		err.Error()
+		util.PrintError(err.Error())
 	}
 }

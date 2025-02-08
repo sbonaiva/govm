@@ -26,10 +26,11 @@ func NewList() List {
 
 func (r *list) Execute(ctx context.Context) error {
 
-	slog.Info("Listing all Go versions", slog.String("List", "Execute"))
+	slog.InfoContext(ctx, "Listing all Go versions", slog.String("List", "Execute"))
 
 	versions, err := r.goDevClient.GetVersions(ctx)
 	if err != nil {
+		slog.ErrorContext(ctx, "Error while getting versions", slog.String("List", "Execute"), slog.String("error", err.Error()))
 		return err
 	}
 

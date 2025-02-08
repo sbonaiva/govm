@@ -31,6 +31,8 @@ func NewInstall() Install {
 }
 
 func (r *install) Execute(ctx context.Context, install *domain.Install) error {
+	slog.InfoContext(ctx, "Installing Go version", slog.String("Install", "Execute"), slog.String("version", install.Version))
+
 	spn := spinner.New(spinner.CharSets[11], 100*time.Millisecond, spinner.WithWriter(os.Stderr))
 	defer spn.Stop()
 	spn.Start()
@@ -39,12 +41,12 @@ func (r *install) Execute(ctx context.Context, install *domain.Install) error {
 		message string
 		action  func() error
 	}{
-		{" Getting home...", func() error { return r.home(install) }},
-		{" Checking version...", func() error { return r.check(ctx, install) }},
-		{" Downloading files...", func() error { return r.download(ctx, install) }},
-		{" Removing previous version...", func() error { return r.remove(install) }},
-		{" Extracting files...", func() error { return r.untar(install) }},
-		{" Adding to path...", func() error { return r.path(install) }},
+		{" Getting home...", func() error { return r.checkUserHome(ctx, install) }},
+		{" Checking version...", func() error { return r.checkVersion(ctx, install) }},
+		{" Downloading files...", func() error { return r.downloadVersion(ctx, install) }},
+		{" Removing previous version...", func() error { return r.removePreviousVersion(ctx, install) }},
+		{" Extracting files...", func() error { return r.untarFiles(ctx, install) }},
+		{" Adding to path...", func() error { return r.addToPath(ctx, install) }},
 	}
 
 	for _, step := range steps {
@@ -57,20 +59,20 @@ func (r *install) Execute(ctx context.Context, install *domain.Install) error {
 	return nil
 }
 
-func (r *install) home(install *domain.Install) error {
+func (r *install) checkUserHome(ctx context.Context, install *domain.Install) error {
 	usr, err := user.Current()
 	if err != nil {
-		slog.Error("Getting current user", slog.String("Install", "home"), slog.String("error", err.Error()))
+		slog.ErrorContext(ctx, "Getting current user", slog.String("Install", "home"), slog.String("error", err.Error()))
 		return domain.ErrUnexpected
 	}
 	install.HomeDir = usr.HomeDir
 	return nil
 }
 
-func (r *install) check(ctx context.Context, install *domain.Install) error {
+func (r *install) checkVersion(ctx context.Context, install *domain.Install) error {
 	ok, err := r.goDevClient.VersionExists(ctx, install.Version)
 	if err != nil {
-		slog.Error("Checking version", slog.String("Install", "checkVersion"), slog.String("error", err.Error()))
+		slog.ErrorContext(ctx, "Checking version", slog.String("Install", "checkVersion"), slog.String("error", err.Error()))
 		return domain.ErrUnexpected
 	}
 
@@ -80,44 +82,44 @@ func (r *install) check(ctx context.Context, install *domain.Install) error {
 	return nil
 }
 
-func (r *install) download(ctx context.Context, install *domain.Install) error {
+func (r *install) downloadVersion(ctx context.Context, install *domain.Install) error {
 	if err := os.Remove(install.DownloadDir()); err != nil && !os.IsNotExist(err) {
-		slog.Error("Removing previous download", slog.String("Install", "downloadVersion"), slog.String("error", err.Error()))
+		slog.ErrorContext(ctx, "Removing previous download", slog.String("Install", "downloadVersion"), slog.String("error", err.Error()))
 		return domain.ErrUnexpected
 	}
 
 	file, err := os.Create(install.DownloadDir())
 	if err != nil {
-		slog.Error("Allocating resources", slog.String("Install", "downloadVersion"), slog.String("error", err.Error()))
+		slog.ErrorContext(ctx, "Allocating resources", slog.String("Install", "downloadVersion"), slog.String("error", err.Error()))
 		return domain.ErrUnexpected
 	}
 	defer file.Close()
 
 	if err := r.goDevClient.DownloadVersion(ctx, *install, file); err != nil {
-		slog.Error("Downloading version", slog.String("Install", "downloadVersion"), slog.String("error", err.Error()))
+		slog.ErrorContext(ctx, "Downloading version", slog.String("Install", "downloadVersion"), slog.String("error", err.Error()))
 		return domain.ErrUnexpected
 	}
 
 	return nil
 }
 
-func (r *install) remove(install *domain.Install) error {
+func (r *install) removePreviousVersion(ctx context.Context, install *domain.Install) error {
 	if err := os.RemoveAll(install.HomeGovmDir()); err != nil && !os.IsNotExist(err) {
-		slog.Error("Removing previous version", slog.String("Install", "removePreviousVersion"), slog.String("error", err.Error()))
+		slog.ErrorContext(ctx, "Removing previous version", slog.String("Install", "removePreviousVersion"), slog.String("error", err.Error()))
 		return domain.ErrUnexpected
 	}
 	return nil
 }
 
-func (r *install) untar(install *domain.Install) error {
+func (r *install) untarFiles(ctx context.Context, install *domain.Install) error {
 	if err := os.Mkdir(install.HomeGovmDir(), 0755); err != nil && !os.IsExist(err) {
-		slog.Error("Creating directory", slog.String("Install", "untar"), slog.String("error", err.Error()))
+		slog.ErrorContext(ctx, "Creating directory", slog.String("Install", "untar"), slog.String("error", err.Error()))
 		return domain.ErrUnexpected
 	}
 
 	cmd := exec.Command("tar", "-C", install.HomeGovmDir(), "-xzf", install.DownloadDir())
 	if err := cmd.Run(); err != nil {
-		slog.Error("Extracting files", slog.String("Install", "untar"), slog.String("error", err.Error()))
+		slog.ErrorContext(ctx, "Extracting files", slog.String("Install", "untar"), slog.String("error", err.Error()))
 		return domain.ErrUnexpected
 	}
 
@@ -126,58 +128,52 @@ func (r *install) untar(install *domain.Install) error {
 	return nil
 }
 
-func (r *install) path(install *domain.Install) error {
+func (r *install) addToPath(ctx context.Context, install *domain.Install) error {
 	if path := os.Getenv("PATH"); strings.Contains(path, install.HomeGoBinDir()) {
-		slog.Info("Go is already in PATH", slog.String("Install", "addToPath"))
+		slog.InfoContext(ctx, "Go is already in PATH", slog.String("Install", "addToPath"))
 		return nil
 	}
 
 	if shell := os.Getenv("SHELL"); shell != "" {
 		if rcf, exists := domain.ShellRunCommandsFiles[shell]; exists {
-			return r.addToShellRunCommands(install, rcf, shell)
+			return r.addToShellRunCommands(ctx, install, rcf, shell)
 		}
 	}
 
 	succeded := 0
 	for shell, rcf := range domain.ShellRunCommandsFiles {
-		err := r.addToShellRunCommands(install, rcf, shell)
+		err := r.addToShellRunCommands(ctx, install, rcf, shell)
 		if err == nil {
 			succeded++
 		}
 	}
 
 	if succeded == 0 {
-		slog.Error("No shell rc file found", slog.String("Install", "addToPath"))
+		slog.ErrorContext(ctx, "No shell rc file found", slog.String("Install", "addToPath"))
 		return domain.ErrUnexpected
 	}
 
 	return nil
 }
 
-func (r *install) addToShellRunCommands(install *domain.Install, rcf string, shell string) error {
+func (r *install) addToShellRunCommands(ctx context.Context, install *domain.Install, rcf string, shell string) error {
 	rcfPath := filepath.Join(install.HomeDir, rcf)
 
 	if _, err := os.Stat(rcfPath); err != nil {
-		slog.Error("Checking file", slog.String("Install", "addToShellRunCommands"), slog.String("error", err.Error()))
+		slog.ErrorContext(ctx, "Checking file", slog.String("Install", "addToShellRunCommands"), slog.String("error", err.Error()))
 		return domain.ErrUnexpected
 	}
 
 	oldContent, err := os.ReadFile(rcfPath)
 	if err != nil {
-		slog.Error("Reading file", slog.String("Install", "addToShellRunCommands"), slog.String("error", err.Error()))
+		slog.ErrorContext(ctx, "Reading file", slog.String("Install", "addToShellRunCommands"), slog.String("error", err.Error()))
 		return domain.ErrUnexpected
 	}
 
 	newContent := []byte(fmt.Sprintf("%s\n%s", string(oldContent), install.Export()))
 
 	if err := os.WriteFile(rcfPath, newContent, 0644); err != nil {
-		slog.Error("Writing file", slog.String("Install", "addToShellRunCommands"), slog.String("error", err.Error()))
-		return domain.ErrUnexpected
-	}
-
-	cmd := exec.Command(shell, "-c", fmt.Sprintf("source %s", rcfPath))
-	if err := cmd.Run(); err != nil {
-		slog.Error("Sourcing file", slog.String("Install", "addToShellRunCommands"), slog.String("error", err.Error()))
+		slog.ErrorContext(ctx, "Writing file", slog.String("Install", "addToShellRunCommands"), slog.String("error", err.Error()))
 		return domain.ErrUnexpected
 	}
 

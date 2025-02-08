@@ -13,6 +13,16 @@ func PrintSuccess(message string, args ...any) {
 	fmt.Println(color.GreenString(message))
 }
 
-func PrintError(message string) {
+func PrintWarning(message string, args ...any) {
+	if len(args) > 0 {
+		message = fmt.Sprintf(message, args...)
+	}
+	fmt.Println(color.YellowString(message))
+}
+
+func PrintError(message string, args ...any) {
+	if len(args) > 0 {
+		message = fmt.Sprintf(message, args...)
+	}
 	fmt.Println(color.RedString(message))
 }

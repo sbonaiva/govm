@@ -26,7 +26,7 @@ func NewUninstallCmd(ctx context.Context) *cobra.Command {
 			reader := bufio.NewReader(os.Stdin)
 			for {
 				if !proceed {
-					fmt.Print("Confirm uninstall? (y/n): ")
+					fmt.Print("Confirm uninstall current Go version? (y/n): ")
 					confirmation, _ := reader.ReadString('\n')
 					confirmation = strings.TrimSpace(confirmation)
 
@@ -52,7 +52,6 @@ func NewUninstallCmd(ctx context.Context) *cobra.Command {
 				return
 			}
 			util.PrintSuccess("Go uninstalled successfully")
-			util.PrintWarning("Please, restart your terminal!!!")
 		},
 	}
 }

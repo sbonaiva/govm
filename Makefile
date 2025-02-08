@@ -3,6 +3,9 @@ test:
 	go tool cover -html=coverage.out -o coverage.html
 build:
 	go build -o bin/govm cmd/govm/main.go
+install: build
+	mkdir -p ~/.govm/bin
+	cp bin/govm ~/.govm/bin/govm
 build-linux-amd64:
 	GOOS=linux GOARCH=amd64 go build -o bin/linux/amd64/govm cmd/govm/main.go
 build-linux-arm64:

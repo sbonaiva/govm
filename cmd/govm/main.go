@@ -25,6 +25,9 @@ func main() {
 	ctx := context.Background()
 
 	rootCmd := &cobra.Command{}
+	rootCmd.Use = "govm"
+	rootCmd.Short = "::: Go Version Manager :::"
+	rootCmd.Version = util.GoVersionManager
 	rootCmd.AddCommand(
 		api.NewListCmd(ctx),
 		api.NewInstallCmd(ctx),

@@ -1,5 +1,6 @@
 test:
-	go test -v ./...
+	go test -coverprofile=coverage.out ./...
+	go tool cover -html=coverage.out -o coverage.html
 build:
 	go build -o bin/govm cmd/govm/main.go
 build-linux-amd64:

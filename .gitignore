@@ -27,3 +27,6 @@ go.work.sum
 govm.log
 
 bin/**/
+
+coverage.out
+coverage.html

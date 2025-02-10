@@ -28,7 +28,6 @@ func NewInstallCmd(ctx context.Context) *cobra.Command {
 				return
 			}
 			util.PrintSuccess("Go version \"%s\" installed successfully", args[0])
-			util.PrintWarning("Please, open a new terminal or run \"source ~/.bashrc\" to use the new version")
 		},
 	}
 }

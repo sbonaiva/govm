@@ -152,7 +152,6 @@ echo "Attempting to add govm to your PATH..."
 
 function infer_shell() {
 	local shell
-	
 	shell="$SHELL"
 
 	case $shell in
@@ -177,8 +176,29 @@ function infer_shell() {
 export GOVM_SHELL="$(infer_shell)"
 
 if [ "$GOVM_SHELL" == "others" ]; then
-	echo "Unsupported platform: $(uname -s) $(uname -m)"
-	exit 1
+	shells=("$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.config/fish/config.fish" "$HOME/.kshrc")
+
+	sucedded=false
+	for shell in "${shells[@]}"; do
+		if test -w "$shell"; then
+			if ! grep -qF "$govm_path_snippet" "$shell"; then
+				echo "$govm_path_snippet" >> "$shell"
+				sucedded=true
+				export GOVM_SHELL="$shell"
+			else
+				echo "govm is already in your PATH."
+				sucedded=true
+				export GOVM_SHELL="$shell"
+			fi
+		fi
+	done
+
+	if [ "$sucedded" == false ]; then
+		echo "Failed to add govm to your PATH. You will need to add the following line to your shell profile manually:"
+		echo ""
+		echo "$govm_path_snippet"
+		exit 1
+	fi
 else
 	if test -w "$GOVM_SHELL"; then
 	    if ! grep -qF "$govm_path_snippet" "$GOVM_SHELL"; then
@@ -190,12 +210,13 @@ else
 		echo "Failed to add govm to your PATH. You will need to add the following line to your shell profile manually:"
 		echo ""
 		echo "$govm_path_snippet"
+		exit 1
 	fi
 fi
 
 echo ""
 echo ""
-echo "Installation completed successfully!"
+echo -e "\033[0;32mInstallation completed successfully!\033[0m"
 echo ""
 echo ""
 echo "Please open a new terminal, or run the following in the existing one:"

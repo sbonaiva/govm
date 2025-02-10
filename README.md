@@ -6,17 +6,21 @@
 **Go Version Manager (govm)** is a command-line tool written in Go that simplifies the management of Go installations on your machine. 
 With a few simple commands, you can easily list, install, and uninstall different versions of the Go programming language, making it perfect for developers who need to switch between versions for various projects.
 
-## Features
+## Requirements
 
-- **List Installed Versions**: Quickly check all the Go versions available and currently installed on your system.
-- **Install Specific Version**: Install a specific version of Go with a single command.
-- **Uninstall Version**: Remove any installed version of Go when it’s no longer needed.
+- Linux or macOS
+- Internet connection
+- [curl](https://curl.se/)
+- [tar](https://www.gnu.org/software/tar/)
+- [sed](https://www.gnu.org/software/sed/)
 
 ## Installation
 
-To get started with `govm`, you need to have [Go](https://golang.org/dl/) installed on your machine. 
+To get started with `govm`, you need to run the following in a terminal:
 
-After that, you can download the `govm` binary from the [releases page](https://github.com/sbonaiva/govm/releases).
+```bash
+curl -s "https://raw.githubusercontent.com/sbonaiva/govm/refs/heads/main/scripts/install.sh" | bash
+```
 
 Alternatively, you can build it from source:
 
@@ -28,29 +32,29 @@ make install
 
 ## Usage
 
-### List Installed Versions
+### List
 
 ```bash
 govm list
 ```
 
-This command will display all Go versions currently installed on your system.
+This command will display all Go versions currently installed on your system, as well as the versions available for installation.
 
-### Install a Specific Version
+### Install
 
 ```bash
 govm install [version]
 ```
 
-Replace `[version]` with the desired Go version (e.g., `go1.17.6`). This command will download and install the specified version.
+Replace `[version]` with the desired Go version (e.g., `go1.23.6`). This command will download and install the specified version.
 
-### Uninstall a Version
+### Uninstall
 
 ```bash
-govm uninstall [version]
+govm uninstall
 ```
 
-Replace `[version]` with the Go version you want to remove from your system.
+This command removes the currently installed version of Go from your system.
 
 ## Contributing
 
@@ -69,6 +73,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Acknowledgements
 
 - [Go](https://golang.org) - For providing a powerful and efficient language.
+- [Cobra](https://github.com/spf13/cobra) - For simplifying the creation of command-line applications in Go.
 - [GitHub](https://github.com) - For hosting this project and fostering open-source collaboration.
 
 ## Contact

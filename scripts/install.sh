@@ -29,6 +29,13 @@ export PATH=$PATH:$HOME/.govm/bin
 EOF
 )
 
+echo "
+ ▗▄▄▖ ▗▄▖ ▗▖  ▗▖▗▖  ▗▖
+▐▌   ▐▌ ▐▌▐▌  ▐▌▐▛▚▞▜▌
+▐▌▝▜▌▐▌ ▐▌▐▌  ▐▌▐▌  ▐▌
+▝▚▄▞▘▝▚▄▞▘ ▝▚▞▘ ▐▌  ▐▌                  
+"
+
 # Sanity checks
 echo "Looking for tar..."
 if ! command -v tar > /dev/null; then

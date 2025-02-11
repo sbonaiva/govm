@@ -108,4 +108,4 @@ For any questions or suggestions, feel free to open an issue.
 
 ---
 
-Thank you for using Go Version Manager! Happy coding!
+Thank you for using Go Version Manager! Proudly made in Brazil 🇧🇷.

@@ -51,7 +51,7 @@ func NewUninstallCmd(ctx context.Context) *cobra.Command {
 				util.PrintError(err.Error())
 				return
 			}
-			util.PrintSuccess("Go uninstalled successfully")
+			util.PrintSuccess("Go uninstalled successfully!")
 		},
 	}
 }

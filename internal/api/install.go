@@ -27,7 +27,8 @@ func NewInstallCmd(ctx context.Context) *cobra.Command {
 				util.PrintError(err.Error())
 				return
 			}
-			util.PrintSuccess("Go version \"%s\" installed successfully", args[0])
+			util.PrintSuccess("Go version \"%s\" installed successfully!", args[0])
+			util.PrintWarning("Please, reopen your terminal to stop using new Go version.")
 		},
 	}
 }

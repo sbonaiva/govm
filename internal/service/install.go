@@ -2,7 +2,9 @@ package service
 
 import (
 	"context"
+	"crypto/sha256"
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
 	"os/exec"
@@ -44,6 +46,7 @@ func (r *install) Execute(ctx context.Context, install *domain.Install) error {
 		{" Getting home...", func() error { return r.checkUserHome(ctx, install) }},
 		{" Checking version...", func() error { return r.checkVersion(ctx, install) }},
 		{" Downloading files...", func() error { return r.downloadVersion(ctx, install) }},
+		{" Verifying checksum...", func() error { return r.checksum(ctx, install) }},
 		{" Removing previous version...", func() error { return r.removePreviousVersion(ctx, install) }},
 		{" Extracting files...", func() error { return r.untarFiles(ctx, install) }},
 		{" Adding to path...", func() error { return r.addToPath(ctx, install) }},
@@ -97,6 +100,35 @@ func (r *install) downloadVersion(ctx context.Context, install *domain.Install) 
 
 	if err := r.goDevClient.DownloadVersion(ctx, *install, file); err != nil {
 		slog.ErrorContext(ctx, "Downloading version", slog.String("Install", "downloadVersion"), slog.String("error", err.Error()))
+		return domain.ErrUnexpected
+	}
+
+	return nil
+}
+
+// TODO: Implement checksum
+func (r *install) checksum(ctx context.Context, install *domain.Install) error {
+	expectedChecksum, err := r.goDevClient.GetChecksum(ctx, install.Version)
+	if err != nil {
+		slog.ErrorContext(ctx, "Getting checksum", slog.String("Install", "checksum"), slog.String("error", err.Error()))
+		return domain.ErrUnexpected
+	}
+
+	file, err := os.Open(install.DownloadDir())
+	if err != nil {
+		slog.ErrorContext(ctx, "Opening file", slog.String("Install", "checksum"), slog.String("error", err.Error()))
+		return domain.ErrUnexpected
+	}
+	defer file.Close()
+
+	hash := sha256.New()
+	if _, err := io.Copy(hash, file); err != nil {
+		slog.ErrorContext(ctx, "Calculating checksum", slog.String("Install", "checksum"), slog.String("error", err.Error()))
+		return domain.ErrUnexpected
+	}
+
+	if expectedChecksum != fmt.Sprintf("%x", hash.Sum(nil)) {
+		slog.ErrorContext(ctx, "Checksum does not match", slog.String("Install", "checksum"))
 		return domain.ErrUnexpected
 	}
 

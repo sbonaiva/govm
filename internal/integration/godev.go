@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"runtime"
 
 	"github.com/sbonaiva/govm/internal/domain"
 )
@@ -19,6 +20,7 @@ const (
 
 type GoDevClient interface {
 	GetVersions(ctx context.Context) ([]domain.GoVersionResponse, error)
+	GetChecksum(ctx context.Context, version string) (string, error)
 	VersionExists(ctx context.Context, version string) (bool, error)
 	DownloadVersion(ctx context.Context, install domain.Install, file *os.File) error
 }
@@ -69,6 +71,25 @@ func (r *goDevClient) GetVersions(ctx context.Context) ([]domain.GoVersionRespon
 	return compatibleVersions, nil
 }
 
+func (r *goDevClient) GetChecksum(ctx context.Context, version string) (string, error) {
+	versions, err := r.GetVersions(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	for _, v := range versions {
+		if v.Version == version {
+			for _, f := range v.Files {
+				if f.Kind == "archive" && f.OS == runtime.GOOS && f.Arch == runtime.GOARCH {
+					return f.SHA256, nil
+				}
+			}
+		}
+	}
+
+	return "", fmt.Errorf("version %s not found", version)
+}
+
 func (r *goDevClient) VersionExists(ctx context.Context, version string) (bool, error) {
 	versions, err := r.GetVersions(ctx)
 	if err != nil {
@@ -76,12 +97,12 @@ func (r *goDevClient) VersionExists(ctx context.Context, version string) (bool, 
 	}
 
 	for _, v := range versions {
-		if v.Version == version {
+		if v.Version == version && v.IsCompatible() && v.Stable {
 			return true, nil
 		}
 	}
 
-	return false, nil
+	return false, err
 }
 
 func (r *goDevClient) DownloadVersion(ctx context.Context, install domain.Install, file *os.File) error {

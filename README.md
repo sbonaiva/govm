@@ -56,6 +56,32 @@ govm uninstall
 
 This command removes the currently installed version of Go from your system.
 
+## Troubleshooting
+If you encounter any issues while using the application, please follow these steps:
+
+**Check the Log File**: 
+
+The first step in troubleshooting is to review the log file for any errors or warnings. You can do this by running the following command in your terminal:
+
+```bash
+cat ~/.govm/govm.log
+```
+
+This will display the contents of the log file, which may provide insight into what went wrong.
+
+**Identify the Issue**: 
+
+Look for any error messages or unusual behavior in the log. Take note of any specific error codes or messages that may help in diagnosing the problem.
+
+**Open an Issue**: 
+
+If you are unable to resolve the issue after reviewing the log file, please open a new issue on our GitHub repository. Make sure to include the following information:
+   - A description of the problem you are experiencing.
+   - Steps to reproduce the issue.
+   - Any relevant error messages or log snippets.
+
+This will help us assist you more effectively.
+
 ## Contributing
 
 Contributions are welcome! If you would like to contribute to `govm`, please follow these steps:

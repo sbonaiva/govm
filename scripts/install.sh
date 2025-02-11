@@ -144,10 +144,24 @@ fi
 
 echo "Detected platform: $(uname -s) $(uname -m)"
 govm_tar_file="govm_${GOVM_VERSION}_${GOVM_PLATFORM}.tar.gz"
+govm_checksum_file="govm_${GOVM_VERSION}_checksums.txt"
 govm_tmp_file="$GOVM_TMP_DIR/$govm_tar_file"
+govm_tmp_checksum_file="$GOVM_TMP_DIR/$govm_checksum_file"
 
-echo "Downloading govm installation file..."
+echo "Downloading govm installation files..."
 curl --fail --location --progress-bar "${GOVM_HOST}/v${GOVM_VERSION}/$govm_tar_file" > "$govm_tmp_file"
+curl --fail --location --progress-bar "${GOVM_HOST}/v${GOVM_VERSION}/$govm_checksum_file" > "$govm_tmp_checksum_file"
+
+echo "Verifying checksum..."
+calculated_checksum=$(sha256sum "$govm_tmp_file" | awk '{ print $1 }')
+expected_checksum=$(grep "$govm_tar_file" "$govm_tmp_checksum_file" | awk '{ print $1 }')
+
+if [ "$calculated_checksum" == "$expected_checksum" ]; then
+    echo "Checksum is valid."
+else
+    echo "Checksum is invalid. Expected: $expected_checksum, but got: $calculated_checksum"
+    exit 1
+fi
 
 echo "Extracting govm installation file..."
 tar -xzf "$govm_tmp_file" -C "$GOVM_DIR"

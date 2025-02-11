@@ -150,6 +150,8 @@ govm_tmp_checksum_file="$GOVM_TMP_DIR/$govm_checksum_file"
 
 echo "Downloading govm installation files..."
 curl --fail --location --progress-bar "${GOVM_HOST}/v${GOVM_VERSION}/$govm_tar_file" > "$govm_tmp_file"
+
+echo "Downloading checksum file..."
 curl --fail --location --progress-bar "${GOVM_HOST}/v${GOVM_VERSION}/$govm_checksum_file" > "$govm_tmp_checksum_file"
 
 echo "Verifying checksum..."

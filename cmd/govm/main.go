@@ -4,19 +4,38 @@ import (
 	"context"
 	"log/slog"
 	"os"
+	"os/user"
+	"path"
 
 	"github.com/sbonaiva/govm/internal/api"
 	"github.com/sbonaiva/govm/internal/util"
 	"github.com/spf13/cobra"
 )
 
+const (
+	logDir  = ".govm"
+	logFile = "govm.log"
+)
+
 func main() {
 
-	os.Remove("govm.log")
-
-	logFile, err := os.OpenFile("govm.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	user, err := user.Current()
 	if err != nil {
-		panic(err)
+		util.PrintError("Failed to get current user")
+		os.Exit(1)
+	}
+
+	logPath := path.Join(user.HomeDir, logDir, logFile)
+
+	if err := os.Remove(logPath); err != nil && !os.IsNotExist(err) {
+		util.PrintError("Failed to remove log file")
+		os.Exit(1)
+	}
+
+	logFile, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		util.PrintError("Failed to create log file")
+		os.Exit(1)
 	}
 	defer logFile.Close()
 

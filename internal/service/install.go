@@ -106,7 +106,6 @@ func (r *install) downloadVersion(ctx context.Context, install *domain.Install) 
 	return nil
 }
 
-// TODO: Implement checksum
 func (r *install) checksum(ctx context.Context, install *domain.Install) error {
 	expectedChecksum, err := r.goDevClient.GetChecksum(ctx, install.Version)
 	if err != nil {

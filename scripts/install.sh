@@ -155,7 +155,15 @@ echo "Downloading checksum file..."
 curl --fail --location --progress-bar "${GOVM_HOST}/v${GOVM_VERSION}/$govm_checksum_file" > "$govm_tmp_checksum_file"
 
 echo "Verifying checksum..."
-calculated_checksum=$(sha256sum "$govm_tmp_file" | awk '{ print $1 }')
+
+calculated_checksum=""
+
+if [ "$(uname -s)" == "Darwin" ]; then
+	calculated_checksum=$(shasum -a 256 "$govm_tmp_file" | awk '{ print $1 }')
+else
+	calculated_checksum=$(sha256sum "$govm_tmp_file" | awk '{ print $1 }')
+fi
+
 expected_checksum=$(grep "$govm_tar_file" "$govm_tmp_checksum_file" | awk '{ print $1 }')
 
 if [ "$calculated_checksum" == "$expected_checksum" ]; then

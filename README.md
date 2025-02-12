@@ -1,7 +1,7 @@
 # Go Version Manager (govm)
 
 ![Go Version Manager](https://img.shields.io/badge/version-0.0.1-blue.svg)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
+![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)
 
 **Go Version Manager (govm)** is a command-line tool written in Go that simplifies the management of Go installations on your machine. 
 With a few simple commands, you can easily list, install, and uninstall different versions of the Go programming language, making it perfect for developers who need to switch between versions for various projects.

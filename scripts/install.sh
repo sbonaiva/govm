@@ -41,7 +41,7 @@ echo "Looking for tar..."
 if ! command -v tar > /dev/null; then
 	echo "Not found."
 	echo "======================================================================================================"
-	echo " Please install tar on your system using your favourite package manager."
+	echo " Please install tar on your system using your favorite package manager."
 	echo ""
 	echo " Restart after installing tar."
 	echo "======================================================================================================"
@@ -54,7 +54,7 @@ if ! command -v curl > /dev/null; then
 	echo "Not found."
 	echo ""
 	echo "======================================================================================================"
-	echo " Please install curl on your system using your favourite package manager."
+	echo " Please install curl on your system using your favorite package manager."
 	echo ""
 	echo " Restart after installing curl."
 	echo "======================================================================================================"
@@ -67,12 +67,39 @@ if [ -z $(command -v sed) ]; then
 	echo "Not found."
 	echo ""
 	echo "======================================================================================================"
-	echo " Please install sed on your system using your favourite package manager."
+	echo " Please install sed on your system using your favorite package manager."
 	echo ""
 	echo " Restart after installing sed."
 	echo "======================================================================================================"
 	echo ""
 	exit 1
+fi
+
+if [ "$(uname -s)" == "Darwin" ]; then
+	echo "Looking for shasum..."
+	if [ -z $(command -v shasum) ]; then
+		echo "Not found."
+		echo ""
+		echo "======================================================================================================"
+		echo " Please install shasum on your system using your favorite package manager."
+		echo ""
+		echo " Restart after installing shasum."
+		echo "======================================================================================================"
+		echo ""
+		exit 1
+	fi
+else
+	if [ -z $(command -v sha256sum) ]; then
+		echo "Not found."
+		echo ""
+		echo "======================================================================================================"
+		echo " Please install sha256sum on your system using your favorite package manager."
+		echo ""
+		echo " Restart after installing sha256sum."
+		echo "======================================================================================================"
+		echo ""
+		exit 1
+	fi
 fi
 
 # Create directories
@@ -155,7 +182,15 @@ echo "Downloading checksum file..."
 curl --fail --location --progress-bar "${GOVM_HOST}/v${GOVM_VERSION}/$govm_checksum_file" > "$govm_tmp_checksum_file"
 
 echo "Verifying checksum..."
-calculated_checksum=$(sha256sum "$govm_tmp_file" | awk '{ print $1 }')
+
+calculated_checksum=""
+
+if [ "$(uname -s)" == "Darwin" ]; then
+	calculated_checksum=$(shasum -a 256 "$govm_tmp_file" | awk '{ print $1 }')
+else
+	calculated_checksum=$(sha256sum "$govm_tmp_file" | awk '{ print $1 }')
+fi
+
 expected_checksum=$(grep "$govm_tar_file" "$govm_tmp_checksum_file" | awk '{ print $1 }')
 
 if [ "$calculated_checksum" == "$expected_checksum" ]; then

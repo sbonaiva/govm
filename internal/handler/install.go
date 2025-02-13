@@ -80,7 +80,7 @@ func (r *installHandler) checkVersion(ctx context.Context, install *domain.Insta
 	}
 
 	if !ok {
-		return fmt.Errorf("Go version \"%s\" is not available", install.Version)
+		return domain.ErrVersionNotAvailable(install.Version)
 	}
 	return nil
 }

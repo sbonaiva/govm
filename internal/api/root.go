@@ -4,6 +4,7 @@ import (
 	"context"
 	"sync"
 
+	"github.com/sbonaiva/govm/internal/gateway"
 	"github.com/sbonaiva/govm/internal/handler"
 	"github.com/sbonaiva/govm/internal/util"
 	"github.com/spf13/cobra"
@@ -14,7 +15,7 @@ var (
 	once     sync.Once
 )
 
-func NewRootCmd(ctx context.Context) *cobra.Command {
+func NewRootCmd(ctx context.Context, httpGateway gateway.HttpGateway) *cobra.Command {
 	once.Do(func() {
 		if instance == nil {
 			instance = &cobra.Command{
@@ -24,9 +25,10 @@ func NewRootCmd(ctx context.Context) *cobra.Command {
 			}
 
 			instance.AddCommand(
-				NewListCmd(ctx, handler.NewList()),
-				NewInstallCmd(ctx, handler.NewInstall()),
+				NewListCmd(ctx, handler.NewList(httpGateway)),
+				NewInstallCmd(ctx, handler.NewInstall(httpGateway)),
 				NewUninstallCmd(ctx, handler.NewUninstall()),
+				NewUseCmd(ctx, handler.NewUse(httpGateway)),
 			)
 		}
 	})

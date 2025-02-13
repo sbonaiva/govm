@@ -26,9 +26,9 @@ type installHandler struct {
 	httpGateway gateway.HttpGateway
 }
 
-func NewInstall() InstallHandler {
+func NewInstall(httpGateway gateway.HttpGateway) InstallHandler {
 	return &installHandler{
-		httpGateway: gateway.NewHttpGateway(),
+		httpGateway: httpGateway,
 	}
 }
 

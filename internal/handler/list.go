@@ -18,9 +18,9 @@ type listHandler struct {
 	httpGateway gateway.HttpGateway
 }
 
-func NewList() ListHandler {
+func NewList(httpGateway gateway.HttpGateway) ListHandler {
 	return &listHandler{
-		httpGateway: gateway.NewHttpGateway(),
+		httpGateway: httpGateway,
 	}
 }
 

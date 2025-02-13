@@ -8,6 +8,7 @@ import (
 	"path"
 
 	"github.com/sbonaiva/govm/internal/api"
+	"github.com/sbonaiva/govm/internal/gateway"
 	"github.com/sbonaiva/govm/internal/util"
 )
 
@@ -42,7 +43,10 @@ func main() {
 
 	ctx := context.Background()
 
-	if err := api.NewRootCmd(ctx).Execute(); err != nil {
+	httpGateway := gateway.NewHttpGateway()
+	rootCmd := api.NewRootCmd(ctx, httpGateway)
+
+	if err := rootCmd.Execute(); err != nil {
 		util.PrintError(err.Error())
 		os.Exit(1)
 	}

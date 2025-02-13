@@ -1,4 +1,4 @@
-package service
+package handler
 
 import (
 	"context"
@@ -15,24 +15,24 @@ import (
 
 	"github.com/briandowns/spinner"
 	"github.com/sbonaiva/govm/internal/domain"
-	"github.com/sbonaiva/govm/internal/integration"
+	"github.com/sbonaiva/govm/internal/gateway"
 )
 
-type Install interface {
-	Execute(ctx context.Context, install *domain.Install) error
+type InstallHandler interface {
+	Handle(ctx context.Context, install *domain.Install) error
 }
 
-type install struct {
-	goDevClient integration.GoDevClient
+type installHandler struct {
+	httpGateway gateway.HttpGateway
 }
 
-func NewInstall() Install {
-	return &install{
-		goDevClient: integration.NewGoDevClient(),
+func NewInstall() InstallHandler {
+	return &installHandler{
+		httpGateway: gateway.NewHttpGateway(),
 	}
 }
 
-func (r *install) Execute(ctx context.Context, install *domain.Install) error {
+func (r *installHandler) Handle(ctx context.Context, install *domain.Install) error {
 	slog.InfoContext(ctx, "Installing Go version", slog.String("Install", "Execute"), slog.String("version", install.Version))
 
 	spn := spinner.New(spinner.CharSets[11], 100*time.Millisecond, spinner.WithWriter(os.Stderr))
@@ -62,7 +62,7 @@ func (r *install) Execute(ctx context.Context, install *domain.Install) error {
 	return nil
 }
 
-func (r *install) checkUserHome(ctx context.Context, install *domain.Install) error {
+func (r *installHandler) checkUserHome(ctx context.Context, install *domain.Install) error {
 	usr, err := user.Current()
 	if err != nil {
 		slog.ErrorContext(ctx, "Getting current user", slog.String("Install", "home"), slog.String("error", err.Error()))
@@ -72,8 +72,8 @@ func (r *install) checkUserHome(ctx context.Context, install *domain.Install) er
 	return nil
 }
 
-func (r *install) checkVersion(ctx context.Context, install *domain.Install) error {
-	ok, err := r.goDevClient.VersionExists(ctx, install.Version)
+func (r *installHandler) checkVersion(ctx context.Context, install *domain.Install) error {
+	ok, err := r.httpGateway.VersionExists(ctx, install.Version)
 	if err != nil {
 		slog.ErrorContext(ctx, "Checking version", slog.String("Install", "checkVersion"), slog.String("error", err.Error()))
 		return domain.ErrUnexpected
@@ -85,7 +85,7 @@ func (r *install) checkVersion(ctx context.Context, install *domain.Install) err
 	return nil
 }
 
-func (r *install) downloadVersion(ctx context.Context, install *domain.Install) error {
+func (r *installHandler) downloadVersion(ctx context.Context, install *domain.Install) error {
 	if err := os.Remove(install.DownloadDir()); err != nil && !os.IsNotExist(err) {
 		slog.ErrorContext(ctx, "Removing previous download", slog.String("Install", "downloadVersion"), slog.String("error", err.Error()))
 		return domain.ErrUnexpected
@@ -98,7 +98,7 @@ func (r *install) downloadVersion(ctx context.Context, install *domain.Install) 
 	}
 	defer file.Close()
 
-	if err := r.goDevClient.DownloadVersion(ctx, *install, file); err != nil {
+	if err := r.httpGateway.DownloadVersion(ctx, *install, file); err != nil {
 		slog.ErrorContext(ctx, "Downloading version", slog.String("Install", "downloadVersion"), slog.String("error", err.Error()))
 		return domain.ErrUnexpected
 	}
@@ -106,8 +106,8 @@ func (r *install) downloadVersion(ctx context.Context, install *domain.Install) 
 	return nil
 }
 
-func (r *install) checksum(ctx context.Context, install *domain.Install) error {
-	expectedChecksum, err := r.goDevClient.GetChecksum(ctx, install.Version)
+func (r *installHandler) checksum(ctx context.Context, install *domain.Install) error {
+	expectedChecksum, err := r.httpGateway.GetChecksum(ctx, install.Version)
 	if err != nil {
 		slog.ErrorContext(ctx, "Getting checksum", slog.String("Install", "checksum"), slog.String("error", err.Error()))
 		return domain.ErrUnexpected
@@ -134,7 +134,7 @@ func (r *install) checksum(ctx context.Context, install *domain.Install) error {
 	return nil
 }
 
-func (r *install) removePreviousVersion(ctx context.Context, install *domain.Install) error {
+func (r *installHandler) removePreviousVersion(ctx context.Context, install *domain.Install) error {
 	if err := os.RemoveAll(install.HomeGoDir()); err != nil && !os.IsNotExist(err) {
 		slog.ErrorContext(ctx, "Removing previous version", slog.String("Install", "removePreviousVersion"), slog.String("error", err.Error()))
 		return domain.ErrUnexpected
@@ -142,7 +142,7 @@ func (r *install) removePreviousVersion(ctx context.Context, install *domain.Ins
 	return nil
 }
 
-func (r *install) untarFiles(ctx context.Context, install *domain.Install) error {
+func (r *installHandler) untarFiles(ctx context.Context, install *domain.Install) error {
 	if err := os.Mkdir(install.HomeGovmDir(), 0755); err != nil && !os.IsExist(err) {
 		slog.ErrorContext(ctx, "Creating directory", slog.String("Install", "untar"), slog.String("error", err.Error()))
 		return domain.ErrUnexpected
@@ -159,7 +159,7 @@ func (r *install) untarFiles(ctx context.Context, install *domain.Install) error
 	return nil
 }
 
-func (r *install) addToPath(ctx context.Context, install *domain.Install) error {
+func (r *installHandler) addToPath(ctx context.Context, install *domain.Install) error {
 	if path := os.Getenv("PATH"); strings.Contains(path, install.HomeGoBinDir()) {
 		slog.InfoContext(ctx, "Go is already in PATH", slog.String("Install", "addToPath"))
 		return nil
@@ -167,13 +167,13 @@ func (r *install) addToPath(ctx context.Context, install *domain.Install) error 
 
 	if shell := os.Getenv("SHELL"); shell != "" {
 		if rcf, exists := domain.ShellRunCommandsFiles[shell]; exists {
-			return r.addToShellRunCommands(ctx, install, rcf, shell)
+			return r.addToShellRunCommands(ctx, install, rcf)
 		}
 	}
 
 	succeded := 0
-	for shell, rcf := range domain.ShellRunCommandsFiles {
-		err := r.addToShellRunCommands(ctx, install, rcf, shell)
+	for _, rcf := range domain.ShellRunCommandsFiles {
+		err := r.addToShellRunCommands(ctx, install, rcf)
 		if err == nil {
 			succeded++
 		}
@@ -187,7 +187,7 @@ func (r *install) addToPath(ctx context.Context, install *domain.Install) error 
 	return nil
 }
 
-func (r *install) addToShellRunCommands(ctx context.Context, install *domain.Install, rcf string, shell string) error {
+func (r *installHandler) addToShellRunCommands(ctx context.Context, install *domain.Install, rcf string) error {
 	rcfPath := filepath.Join(install.HomeDir, rcf)
 
 	if _, err := os.Stat(rcfPath); err != nil {

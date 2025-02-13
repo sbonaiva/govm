@@ -6,12 +6,25 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/sbonaiva/govm/internal/domain"
-	"github.com/sbonaiva/govm/internal/service"
+	"github.com/sbonaiva/govm/internal/handler"
 	"github.com/sbonaiva/govm/internal/util"
 	"github.com/spf13/cobra"
 )
+
+var (
+	uninstallHandler     handler.UninstallHandler
+	onceUninstallHandler sync.Once
+)
+
+func getUninstallHandler() handler.UninstallHandler {
+	onceUninstallHandler.Do(func() {
+		uninstallHandler = handler.NewUninstall()
+	})
+	return uninstallHandler
+}
 
 func NewUninstallCmd(ctx context.Context) *cobra.Command {
 	return &cobra.Command{
@@ -44,7 +57,7 @@ func NewUninstallCmd(ctx context.Context) *cobra.Command {
 					continue
 				}
 			}
-			if err := service.NewUninstall().Execute(
+			if err := getUninstallHandler().Handle(
 				ctx,
 				&domain.Uninstall{},
 			); err != nil {

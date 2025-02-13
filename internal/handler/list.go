@@ -1,4 +1,4 @@
-package service
+package handler
 
 import (
 	"context"
@@ -7,28 +7,28 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/sbonaiva/govm/internal/integration"
+	"github.com/sbonaiva/govm/internal/gateway"
 )
 
-type List interface {
-	Execute(ctx context.Context) error
+type ListHandler interface {
+	Handle(ctx context.Context) error
 }
 
-type list struct {
-	goDevClient integration.GoDevClient
+type listHandler struct {
+	httpGateway gateway.HttpGateway
 }
 
-func NewList() List {
-	return &list{
-		goDevClient: integration.NewGoDevClient(),
+func NewList() ListHandler {
+	return &listHandler{
+		httpGateway: gateway.NewHttpGateway(),
 	}
 }
 
-func (r *list) Execute(ctx context.Context) error {
+func (r *listHandler) Handle(ctx context.Context) error {
 
 	slog.InfoContext(ctx, "Listing all Go versions", slog.String("List", "Execute"))
 
-	versions, err := r.goDevClient.GetVersions(ctx)
+	versions, err := r.httpGateway.GetVersions(ctx)
 	if err != nil {
 		slog.ErrorContext(ctx, "Error while getting versions", slog.String("List", "Execute"), slog.String("error", err.Error()))
 		return err

@@ -1,4 +1,4 @@
-package integration
+package gateway
 
 import (
 	"context"
@@ -18,31 +18,18 @@ const (
 	goDownloadURL = "https://go.dev/dl/%s"
 )
 
-type GoDevClient interface {
-	GetVersions(ctx context.Context) ([]domain.GoVersionResponse, error)
-	GetChecksum(ctx context.Context, version string) (string, error)
-	VersionExists(ctx context.Context, version string) (bool, error)
-	DownloadVersion(ctx context.Context, install domain.Install, file *os.File) error
+type httpClient struct {
+	client *http.Client
 }
 
-type goDevClient struct {
-	httpClient *http.Client
-}
-
-func NewGoDevClient() GoDevClient {
-	return &goDevClient{
-		httpClient: &http.Client{},
-	}
-}
-
-func (r *goDevClient) GetVersions(ctx context.Context) ([]domain.GoVersionResponse, error) {
+func (r *httpClient) GetVersions(ctx context.Context) ([]domain.GoVersionResponse, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, goVersionsURL, nil)
 	if err != nil {
 		slog.ErrorContext(ctx, "Error while creating request", slog.String("GoDevClient", "GetVersions"), slog.String("error", err.Error()))
 		return []domain.GoVersionResponse{}, err
 	}
 
-	resp, err := r.httpClient.Do(req)
+	resp, err := r.client.Do(req)
 	if err != nil {
 		slog.ErrorContext(ctx, "Error while making request", slog.String("GoDevClient", "GetVersions"), slog.String("error", err.Error()))
 		return []domain.GoVersionResponse{}, err
@@ -71,7 +58,7 @@ func (r *goDevClient) GetVersions(ctx context.Context) ([]domain.GoVersionRespon
 	return compatibleVersions, nil
 }
 
-func (r *goDevClient) GetChecksum(ctx context.Context, version string) (string, error) {
+func (r *httpClient) GetChecksum(ctx context.Context, version string) (string, error) {
 	versions, err := r.GetVersions(ctx)
 	if err != nil {
 		return "", err
@@ -90,7 +77,7 @@ func (r *goDevClient) GetChecksum(ctx context.Context, version string) (string, 
 	return "", fmt.Errorf("version %s not found", version)
 }
 
-func (r *goDevClient) VersionExists(ctx context.Context, version string) (bool, error) {
+func (r *httpClient) VersionExists(ctx context.Context, version string) (bool, error) {
 	versions, err := r.GetVersions(ctx)
 	if err != nil {
 		return false, err
@@ -105,8 +92,8 @@ func (r *goDevClient) VersionExists(ctx context.Context, version string) (bool, 
 	return false, err
 }
 
-func (r *goDevClient) DownloadVersion(ctx context.Context, install domain.Install, file *os.File) error {
-	resp, err := r.httpClient.Get(fmt.Sprintf(goDownloadURL, install.Filename()))
+func (r *httpClient) DownloadVersion(ctx context.Context, install domain.Install, file *os.File) error {
+	resp, err := r.client.Get(fmt.Sprintf(goDownloadURL, install.Filename()))
 	if err != nil {
 		slog.ErrorContext(ctx, "Error while downloading file", slog.String("GoDevClient", "DownloadVersion"), slog.String("error", err.Error()))
 		return err

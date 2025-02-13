@@ -1,4 +1,4 @@
-package service
+package handler
 
 import (
 	"context"
@@ -13,17 +13,17 @@ import (
 	"github.com/sbonaiva/govm/internal/domain"
 )
 
-type Uninstall interface {
-	Execute(ctx context.Context, uninstall *domain.Uninstall) error
+type UninstallHandler interface {
+	Handle(ctx context.Context, uninstall *domain.Uninstall) error
 }
 
-type uninstall struct{}
+type uninstallHandler struct{}
 
-func NewUninstall() Uninstall {
-	return &uninstall{}
+func NewUninstall() UninstallHandler {
+	return &uninstallHandler{}
 }
 
-func (r *uninstall) Execute(ctx context.Context, uninstall *domain.Uninstall) error {
+func (r *uninstallHandler) Handle(ctx context.Context, uninstall *domain.Uninstall) error {
 	slog.InfoContext(ctx, "Uninstalling Go version", slog.String("Uninstall", "Execute"))
 
 	spn := spinner.New(spinner.CharSets[11], 100*time.Millisecond, spinner.WithWriter(os.Stderr))
@@ -50,7 +50,7 @@ func (r *uninstall) Execute(ctx context.Context, uninstall *domain.Uninstall) er
 	return nil
 }
 
-func (r *uninstall) checkUserHome(ctx context.Context, uninstall *domain.Uninstall) error {
+func (r *uninstallHandler) checkUserHome(ctx context.Context, uninstall *domain.Uninstall) error {
 	usr, err := user.Current()
 	if err != nil {
 		slog.ErrorContext(ctx, "Getting current user", slog.String("Uninstall", "checkUserHome"), slog.String("error", err.Error()))
@@ -60,7 +60,7 @@ func (r *uninstall) checkUserHome(ctx context.Context, uninstall *domain.Uninsta
 	return nil
 }
 
-func (r *uninstall) checkVersion(ctx context.Context, uninstall *domain.Uninstall) error {
+func (r *uninstallHandler) checkVersion(ctx context.Context, uninstall *domain.Uninstall) error {
 
 	fs, err := os.Stat(uninstall.HomeGoDir())
 	if err != nil {
@@ -76,7 +76,7 @@ func (r *uninstall) checkVersion(ctx context.Context, uninstall *domain.Uninstal
 	return nil
 }
 
-func (r *uninstall) removeCurrentVersion(ctx context.Context, uninstall *domain.Uninstall) error {
+func (r *uninstallHandler) removeCurrentVersion(ctx context.Context, uninstall *domain.Uninstall) error {
 	if err := os.RemoveAll(uninstall.HomeGoDir()); err != nil {
 		slog.ErrorContext(ctx, "Removing current version", slog.String("Uninstall", "removeCurrentVersion"), slog.String("error", err.Error()))
 		return domain.ErrUnexpected
@@ -84,7 +84,7 @@ func (r *uninstall) removeCurrentVersion(ctx context.Context, uninstall *domain.
 	return nil
 }
 
-func (r *uninstall) removeFromPath(ctx context.Context, uninstall *domain.Uninstall) error {
+func (r *uninstallHandler) removeFromPath(ctx context.Context, uninstall *domain.Uninstall) error {
 	if path := os.Getenv("PATH"); !strings.Contains(path, uninstall.HomeGoBinDir()) {
 		slog.InfoContext(ctx, "Go is already removed from PATH", slog.String("Uninstall", "removeFromPath"))
 		return nil
@@ -92,13 +92,13 @@ func (r *uninstall) removeFromPath(ctx context.Context, uninstall *domain.Uninst
 
 	if shell := os.Getenv("SHELL"); shell != "" {
 		if rcf, exists := domain.ShellRunCommandsFiles[shell]; exists {
-			return r.removeFromShellRunCommands(ctx, uninstall, rcf, shell)
+			return r.removeFromShellRunCommands(ctx, uninstall, rcf)
 		}
 	}
 
 	succeded := 0
-	for shell, rcf := range domain.ShellRunCommandsFiles {
-		err := r.removeFromShellRunCommands(ctx, uninstall, rcf, shell)
+	for _, rcf := range domain.ShellRunCommandsFiles {
+		err := r.removeFromShellRunCommands(ctx, uninstall, rcf)
 		if err == nil {
 			succeded++
 		}
@@ -112,7 +112,7 @@ func (r *uninstall) removeFromPath(ctx context.Context, uninstall *domain.Uninst
 	return nil
 }
 
-func (r *uninstall) removeFromShellRunCommands(ctx context.Context, uninstall *domain.Uninstall, rcf string, shell string) error {
+func (r *uninstallHandler) removeFromShellRunCommands(ctx context.Context, uninstall *domain.Uninstall, rcf string) error {
 	rcfPath := filepath.Join(uninstall.HomeDir, rcf)
 
 	if _, err := os.Stat(rcfPath); err != nil {

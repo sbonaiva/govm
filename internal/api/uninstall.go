@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"sync"
 
 	"github.com/sbonaiva/govm/internal/domain"
 	"github.com/sbonaiva/govm/internal/handler"
@@ -14,19 +13,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	uninstallHandler     handler.UninstallHandler
-	onceUninstallHandler sync.Once
-)
-
-func getUninstallHandler() handler.UninstallHandler {
-	onceUninstallHandler.Do(func() {
-		uninstallHandler = handler.NewUninstall()
-	})
-	return uninstallHandler
-}
-
-func NewUninstallCmd(ctx context.Context) *cobra.Command {
+func NewUninstallCmd(ctx context.Context, handler handler.UninstallHandler) *cobra.Command {
 	return &cobra.Command{
 		Use:     "uninstall",
 		Aliases: []string{"u"},
@@ -57,7 +44,7 @@ func NewUninstallCmd(ctx context.Context) *cobra.Command {
 					continue
 				}
 			}
-			if err := getUninstallHandler().Handle(
+			if err := handler.Handle(
 				ctx,
 				&domain.Uninstall{},
 			); err != nil {

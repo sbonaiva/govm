@@ -15,7 +15,11 @@ var (
 	once     sync.Once
 )
 
-func NewRootCmd(ctx context.Context, httpGateway gateway.HttpGateway) *cobra.Command {
+func NewRootCmd(
+	ctx context.Context,
+	httpGateway gateway.HttpGateway,
+	osGateway gateway.OsGateway,
+) *cobra.Command {
 	once.Do(func() {
 		if instance == nil {
 			instance = &cobra.Command{
@@ -26,7 +30,7 @@ func NewRootCmd(ctx context.Context, httpGateway gateway.HttpGateway) *cobra.Com
 
 			instance.AddCommand(
 				NewListCmd(ctx, handler.NewList(httpGateway)),
-				NewInstallCmd(ctx, handler.NewInstall(httpGateway)),
+				NewInstallCmd(ctx, handler.NewInstall(httpGateway, osGateway)),
 				NewUninstallCmd(ctx, handler.NewUninstall()),
 				NewUseCmd(ctx, handler.NewUse(httpGateway)),
 			)

@@ -31,3 +31,12 @@ func (m *HttpGatewayMock) DownloadVersion(ctx context.Context, install domain.In
 	args := m.Called(ctx, install, file)
 	return args.Error(0)
 }
+
+type OsGatewayMock struct {
+	mock.Mock
+}
+
+func (m *OsGatewayMock) GetUserHomeDir() (string, error) {
+	args := m.Called()
+	return args.String(0), args.Error(1)
+}

@@ -20,3 +20,11 @@ func NewHttpGateway() HttpGateway {
 		client: &http.Client{},
 	}
 }
+
+type OsGateway interface {
+	GetUserHomeDir() (string, error)
+}
+
+func NewOsGateway() OsGateway {
+	return &osClient{}
+}

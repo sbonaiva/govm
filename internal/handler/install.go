@@ -8,7 +8,6 @@ import (
 	"log/slog"
 	"os"
 	"os/exec"
-	"os/user"
 	"path/filepath"
 	"strings"
 	"time"
@@ -24,11 +23,13 @@ type InstallHandler interface {
 
 type installHandler struct {
 	httpGateway gateway.HttpGateway
+	osGateway   gateway.OsGateway
 }
 
-func NewInstall(httpGateway gateway.HttpGateway) InstallHandler {
+func NewInstall(httpGateway gateway.HttpGateway, osGateway gateway.OsGateway) InstallHandler {
 	return &installHandler{
 		httpGateway: httpGateway,
+		osGateway:   osGateway,
 	}
 }
 
@@ -63,12 +64,12 @@ func (r *installHandler) Handle(ctx context.Context, install *domain.Install) er
 }
 
 func (r *installHandler) checkUserHome(ctx context.Context, install *domain.Install) error {
-	usr, err := user.Current()
+	homeDir, err := r.osGateway.GetUserHomeDir()
 	if err != nil {
 		slog.ErrorContext(ctx, "Getting current user", slog.String("Install", "home"), slog.String("error", err.Error()))
 		return domain.ErrUnexpected
 	}
-	install.HomeDir = usr.HomeDir
+	install.HomeDir = homeDir
 	return nil
 }
 

@@ -2,6 +2,7 @@ package handler_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/sbonaiva/govm/internal/domain"
@@ -13,9 +14,11 @@ import (
 
 type installHandlerSuite struct {
 	suite.Suite
-	ctx     context.Context
-	gateway *gateway.HttpGatewayMock
-	handler handler.InstallHandler
+	ctx         context.Context
+	fakeHomeDir string
+	httpGateway *gateway.HttpGatewayMock
+	osGateway   *gateway.OsGatewayMock
+	handler     handler.InstallHandler
 }
 
 func TestInstallHandler(t *testing.T) {
@@ -24,18 +27,20 @@ func TestInstallHandler(t *testing.T) {
 
 func (r *installHandlerSuite) SetupTest() {
 	r.ctx = context.Background()
-	r.gateway = new(gateway.HttpGatewayMock)
-	r.handler = handler.NewInstall(r.gateway)
+	r.fakeHomeDir = "/home/fake"
+	r.httpGateway = new(gateway.HttpGatewayMock)
+	r.osGateway = new(gateway.OsGatewayMock)
+	r.handler = handler.NewInstall(r.httpGateway, r.osGateway)
 }
 
 func (r *installHandlerSuite) TearDownTest() {
-	r.gateway.AssertExpectations(r.T())
+	r.httpGateway.AssertExpectations(r.T())
 }
 
 func (r *installHandlerSuite) TestVersionNotAvailable() {
 	install := &domain.Install{Version: "1.16"}
-
-	r.gateway.On("VersionExists", r.ctx, install.Version).Return(false, nil)
+	r.osGateway.On("GetUserHomeDir").Return(r.fakeHomeDir, nil)
+	r.httpGateway.On("VersionExists", r.ctx, install.Version).Return(false, nil)
 
 	err := r.handler.Handle(r.ctx, install)
 
@@ -43,11 +48,23 @@ func (r *installHandlerSuite) TestVersionNotAvailable() {
 	r.Equal(domain.ErrVersionNotAvailable(install.Version), err)
 }
 
+func (r *installHandlerSuite) TestUserHomeError() {
+	install := &domain.Install{Version: "1.16"}
+
+	r.osGateway.On("GetUserHomeDir").Return("", errors.New("error"))
+
+	err := r.handler.Handle(r.ctx, install)
+
+	r.Error(err)
+	r.Equal(domain.ErrUnexpected, err)
+}
+
 func (r *installHandlerSuite) TestDownloadError() {
 	install := &domain.Install{Version: "1.16"}
 
-	r.gateway.On("VersionExists", r.ctx, install.Version).Return(true, nil)
-	r.gateway.On("DownloadVersion", r.ctx, mock.Anything, mock.Anything).Return(domain.ErrUnexpected)
+	r.osGateway.On("GetUserHomeDir").Return(r.fakeHomeDir, nil)
+	r.httpGateway.On("VersionExists", r.ctx, install.Version).Return(true, nil)
+	r.httpGateway.On("DownloadVersion", r.ctx, mock.Anything, mock.Anything).Return(domain.ErrUnexpected)
 
 	err := r.handler.Handle(r.ctx, install)
 
@@ -58,9 +75,10 @@ func (r *installHandlerSuite) TestDownloadError() {
 func (r *installHandlerSuite) TestChecksumError() {
 	install := &domain.Install{Version: "1.16"}
 
-	r.gateway.On("VersionExists", r.ctx, install.Version).Return(true, nil)
-	r.gateway.On("DownloadVersion", r.ctx, mock.Anything, mock.Anything).Return(nil)
-	r.gateway.On("GetChecksum", r.ctx, install.Version).Return("", nil)
+	r.osGateway.On("GetUserHomeDir").Return(r.fakeHomeDir, nil)
+	r.httpGateway.On("VersionExists", r.ctx, install.Version).Return(true, nil)
+	r.httpGateway.On("DownloadVersion", r.ctx, mock.Anything, mock.Anything).Return(nil)
+	r.httpGateway.On("GetChecksum", r.ctx, install.Version).Return("", nil)
 
 	err := r.handler.Handle(r.ctx, install)
 

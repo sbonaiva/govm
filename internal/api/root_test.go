@@ -14,7 +14,7 @@ func TestRootCmd(t *testing.T) {
 	// Arrange
 	ctx := context.Background()
 
-	cmd := api.NewRootCmd(ctx, new(gateway.HttpGatewayMock))
+	cmd := api.NewRootCmd(ctx, new(gateway.HttpGatewayMock), new(gateway.OsGatewayMock))
 
 	// Act
 	output, err := test.CaptureOutput(func() error {

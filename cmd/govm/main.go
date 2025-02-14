@@ -44,7 +44,8 @@ func main() {
 	ctx := context.Background()
 
 	httpGateway := gateway.NewHttpGateway()
-	rootCmd := api.NewRootCmd(ctx, httpGateway)
+	osGateway := gateway.NewOsGateway()
+	rootCmd := api.NewRootCmd(ctx, httpGateway, osGateway)
 
 	if err := rootCmd.Execute(); err != nil {
 		util.PrintError(err.Error())

@@ -9,110 +9,116 @@ import (
 	"github.com/sbonaiva/govm/internal/api"
 	"github.com/sbonaiva/govm/internal/domain"
 	"github.com/sbonaiva/govm/internal/handler"
-	"github.com/sbonaiva/govm/internal/util"
-	"github.com/stretchr/testify/assert"
+	"github.com/sbonaiva/govm/internal/test"
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/suite"
 )
 
-func TestUninstallCmd_Success(t *testing.T) {
+type uninstallCmdSuite struct {
+	suite.Suite
+	ctx     context.Context
+	handler *handler.UninstallHandlerMock
+	cmd     *cobra.Command
+}
+
+func TestUninstallCmd(t *testing.T) {
+	suite.Run(t, new(uninstallCmdSuite))
+}
+
+func (r *uninstallCmdSuite) SetupTest() {
+	r.ctx = context.Background()
+	r.handler = new(handler.UninstallHandlerMock)
+	r.cmd = api.NewUninstallCmd(r.ctx, r.handler)
+}
+
+func (r *uninstallCmdSuite) TearDownTest() {
+	r.handler.AssertExpectations(r.T())
+}
+
+func (r *uninstallCmdSuite) TestSuccess() {
 	// Arrange
-	ctx := context.Background()
-	mockHandler := new(handler.MockUninstallHandler)
-	mockHandler.On("Handle", ctx, &domain.Uninstall{}).Return(nil)
+	r.handler.On("Handle", r.ctx, &domain.Uninstall{}).Return(nil)
 
 	input := []byte("y")
-	r, w, err := os.Pipe()
+	rdr, wtr, err := os.Pipe()
 	if err != nil {
-		t.Fatal(err)
+		r.T().Fatal(err)
 	}
 
-	_, err = w.Write(input)
+	_, err = wtr.Write(input)
 	if err != nil {
-		t.Error(err)
+		r.T().Fatal(err)
 	}
-	w.Close()
+	wtr.Close()
 
-	// Restore stdin right after the test.
 	defer func(v *os.File) { os.Stdin = v }(os.Stdin)
-	os.Stdin = r
-
-	cmd := api.NewUninstallCmd(ctx, mockHandler)
+	os.Stdin = rdr
 
 	// Act
-	output, _ := util.CaptureOutput(func() error {
-		cmd.Run(cmd, []string{})
+	output, err := test.CaptureOutput(func() error {
+		r.cmd.Run(r.cmd, []string{})
 		return nil
 	})
 
 	// Assert
-	assert.Contains(t, output, "Go uninstalled successfully!")
-	mockHandler.AssertExpectations(t)
+	r.NoError(err)
+	r.Equal("Confirm uninstall current Go version? (y/n): Go uninstalled successfully!\n", output)
 }
 
-func TestUninstallCmd_Error(t *testing.T) {
+func (r *uninstallCmdSuite) TestError() {
 	// Arrange
-	ctx := context.Background()
-	mockHandler := new(handler.MockUninstallHandler)
-	mockHandler.On("Handle", ctx, &domain.Uninstall{}).Return(errors.New("failed to uninstall Go"))
+	r.handler.On("Handle", r.ctx, &domain.Uninstall{}).Return(errors.New("uninstall error"))
 
 	input := []byte("y")
-	r, w, err := os.Pipe()
+	rdr, wtr, err := os.Pipe()
 	if err != nil {
-		t.Fatal(err)
+		r.T().Fatal(err)
 	}
 
-	_, err = w.Write(input)
+	_, err = wtr.Write(input)
 	if err != nil {
-		t.Error(err)
+		r.T().Fatal(err)
 	}
-	w.Close()
+	wtr.Close()
 
-	// Restore stdin right after the test.
 	defer func(v *os.File) { os.Stdin = v }(os.Stdin)
-	os.Stdin = r
-
-	cmd := api.NewUninstallCmd(ctx, mockHandler)
+	os.Stdin = rdr
 
 	// Act
-	output, _ := util.CaptureOutput(func() error {
-		cmd.Run(cmd, []string{})
+	output, err := test.CaptureOutput(func() error {
+		r.cmd.Run(r.cmd, []string{})
 		return nil
 	})
 
 	// Assert
-	assert.Contains(t, output, "Error: failed to uninstall Go")
-	mockHandler.AssertExpectations(t)
+	r.NoError(err)
+	r.Equal("Confirm uninstall current Go version? (y/n): Error: uninstall error\n", output)
 }
 
-func TestUninstallCmd_Abort(t *testing.T) {
+func (r *uninstallCmdSuite) TestAbort() {
 	// Arrange
-	ctx := context.Background()
-	mockHandler := new(handler.MockUninstallHandler)
-
 	input := []byte("n")
-	r, w, err := os.Pipe()
+	rdr, wtr, err := os.Pipe()
 	if err != nil {
-		t.Fatal(err)
+		r.T().Fatal(err)
 	}
 
-	_, err = w.Write(input)
+	_, err = wtr.Write(input)
 	if err != nil {
-		t.Error(err)
+		r.T().Fatal(err)
 	}
-	w.Close()
+	wtr.Close()
 
-	// Restore stdin right after the test.
 	defer func(v *os.File) { os.Stdin = v }(os.Stdin)
-	os.Stdin = r
-
-	cmd := api.NewUninstallCmd(ctx, mockHandler)
+	os.Stdin = rdr
 
 	// Act
-	output, _ := util.CaptureOutput(func() error {
-		cmd.Run(cmd, []string{})
+	output, err := test.CaptureOutput(func() error {
+		r.cmd.Run(r.cmd, []string{})
 		return nil
 	})
 
 	// Assert
-	assert.Contains(t, output, "Uninstall aborted by user")
-	mockHandler.AssertExpectations(t)
+	r.NoError(err)
+	r.Equal("Confirm uninstall current Go version? (y/n): Uninstall aborted by user\n", output)
 }

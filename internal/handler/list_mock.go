@@ -6,11 +6,11 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-type MockListHandler struct {
+type ListHandlerMock struct {
 	mock.Mock
 }
 
-func (m *MockListHandler) Handle(ctx context.Context) error {
+func (m *ListHandlerMock) Handle(ctx context.Context) error {
 	args := m.Called(ctx)
 	return args.Error(0)
 }

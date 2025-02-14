@@ -8,51 +8,68 @@ import (
 	"github.com/sbonaiva/govm/internal/api"
 	"github.com/sbonaiva/govm/internal/domain"
 	"github.com/sbonaiva/govm/internal/handler"
-	"github.com/stretchr/testify/assert"
+	"github.com/sbonaiva/govm/internal/test"
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/suite"
 )
 
-func TestNewInstallCmd_Success(t *testing.T) {
-	// Arrange
-	ctx := context.Background()
-	mockHandler := new(handler.MockInstallHandler)
-	mockHandler.On("Handle", ctx, &domain.Install{Version: "1.15.0"}).Return(nil)
-	cmd := api.NewInstallCmd(ctx, mockHandler)
-	cmd.SetArgs([]string{"1.15.0"})
-
-	// Act
-	err := cmd.Execute()
-
-	// Assert
-	assert.NoError(t, err)
-	mockHandler.AssertExpectations(t)
+type installCmdSuite struct {
+	suite.Suite
+	ctx     context.Context
+	handler *handler.InstallHandlerMock
+	cmd     *cobra.Command
 }
 
-func TestNewInstallCmd_ErrorHandling(t *testing.T) {
-	// Arrange
-	ctx := context.Background()
-	mockHandler := new(handler.MockInstallHandler)
-	mockHandler.On("Handle", ctx, &domain.Install{Version: "1.15.0"}).Return(errors.New("install error"))
-	cmd := api.NewInstallCmd(ctx, mockHandler)
-	cmd.SetArgs([]string{"1.15.0"})
-
-	// Act
-	err := cmd.Execute()
-
-	// Assert
-	assert.NoError(t, err)
-	mockHandler.AssertExpectations(t)
+func TestInstallCmd(t *testing.T) {
+	suite.Run(t, new(installCmdSuite))
 }
 
-func TestNewInstallCmd_InvalidArgument(t *testing.T) {
+func (r *installCmdSuite) SetupTest() {
+	r.ctx = context.Background()
+	r.handler = new(handler.InstallHandlerMock)
+	r.cmd = api.NewInstallCmd(r.ctx, r.handler)
+}
+
+func (r *installCmdSuite) TearDownTest() {
+	r.handler.AssertExpectations(r.T())
+}
+
+func (r *installCmdSuite) TestSuccess() {
 	// Arrange
-	ctx := context.Background()
-	mockHandler := new(handler.MockInstallHandler)
-	cmd := api.NewInstallCmd(ctx, mockHandler)
+	r.handler.On("Handle", r.ctx, &domain.Install{Version: "1.15.0"}).Return(nil)
 
 	// Act
-	err := cmd.Execute()
+	output, _ := test.CaptureOutput(func() error {
+		r.cmd.Run(r.cmd, []string{"1.15.0"})
+		return nil
+	})
 
 	// Assert
-	assert.Error(t, err)
-	assert.EqualError(t, err, "accepts 1 arg(s), received 0")
+	r.Equal("Go version \"1.15.0\" installed successfully!\nPlease, reopen your terminal to start using new version.\n", output)
+}
+
+func (r *installCmdSuite) TestErrorHandling() {
+	// Arrange
+	r.handler.On("Handle", r.ctx, &domain.Install{Version: "1.24.0"}).Return(errors.New("install error"))
+
+	// Act
+	output, _ := test.CaptureOutput(func() error {
+		r.cmd.Run(r.cmd, []string{"1.24.0"})
+		return nil
+	})
+
+	// Assert
+	r.Equal("Error: install error\n", output)
+}
+
+func (r *installCmdSuite) TestInvalidArguments() {
+	// Arrange
+	r.cmd.SetArgs([]string{})
+
+	// Act
+	err := r.cmd.Execute()
+
+	// Assert
+	r.Error(err)
+	r.EqualError(err, "accepts 1 arg(s), received 0")
 }

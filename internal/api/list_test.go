@@ -7,34 +7,58 @@ import (
 
 	"github.com/sbonaiva/govm/internal/api"
 	"github.com/sbonaiva/govm/internal/handler"
+	"github.com/sbonaiva/govm/internal/test"
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/suite"
 )
 
-func TestNewListCmd_Success(t *testing.T) {
-	// Arrange
-	ctx := context.Background()
-	mockHandler := new(handler.MockListHandler)
-	mockHandler.On("Handle", ctx).Return(nil)
-
-	cmd := api.NewListCmd(ctx, mockHandler)
-
-	// Act
-	cmd.Run(cmd, []string{})
-
-	// Assert
-	mockHandler.AssertExpectations(t)
+type listCmdSuite struct {
+	suite.Suite
+	ctx     context.Context
+	handler *handler.ListHandlerMock
+	cmd     *cobra.Command
 }
 
-func TestNewListCmd_ErrorHandling(t *testing.T) {
-	// Arrange
-	ctx := context.Background()
-	mockHandler := new(handler.MockListHandler)
-	mockHandler.On("Handle", ctx).Return(errors.New("error"))
+func TestListCmd(t *testing.T) {
+	suite.Run(t, new(listCmdSuite))
+}
 
-	cmd := api.NewListCmd(ctx, mockHandler)
+func (r *listCmdSuite) SetupTest() {
+	r.ctx = context.Background()
+	r.handler = new(handler.ListHandlerMock)
+	r.cmd = api.NewListCmd(r.ctx, r.handler)
+}
+
+func (r *listCmdSuite) TearDownTest() {
+	r.handler.AssertExpectations(r.T())
+}
+
+func (r *listCmdSuite) TestSuccess() {
+	// Arrange
+	r.handler.On("Handle", r.ctx).Return(nil)
+	r.cmd.SetArgs([]string{})
 
 	// Act
-	cmd.Run(cmd, []string{})
+	output, _ := test.CaptureOutput(func() error {
+		r.cmd.Run(r.cmd, []string{})
+		return nil
+	})
 
 	// Assert
-	mockHandler.AssertExpectations(t)
+	r.Empty(output)
+}
+
+func (r *listCmdSuite) TestErrorHandling() {
+	// Arrange
+	r.handler.On("Handle", r.ctx).Return(errors.New("list error"))
+	r.cmd.SetArgs([]string{})
+
+	// Act
+	output, _ := test.CaptureOutput(func() error {
+		r.cmd.Run(r.cmd, []string{})
+		return nil
+	})
+
+	// Assert
+	r.Equal("Error: list error\n", output)
 }

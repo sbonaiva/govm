@@ -3,45 +3,61 @@ package handler_test
 import (
 	"context"
 	"errors"
-	"fmt"
-	"runtime"
 	"testing"
 
 	"github.com/sbonaiva/govm/internal/domain"
 	"github.com/sbonaiva/govm/internal/gateway"
 	"github.com/sbonaiva/govm/internal/handler"
-	"github.com/sbonaiva/govm/internal/util"
-	"github.com/stretchr/testify/assert"
+	"github.com/sbonaiva/govm/internal/test"
+	"github.com/stretchr/testify/suite"
 )
 
-func TestHandle_Success(t *testing.T) {
-	ctx := context.Background()
-	mockHttpGateway := new(gateway.MockHttpGateway)
+type listHandlerSuite struct {
+	suite.Suite
+	ctx     context.Context
+	gateway *gateway.HttpGatewayMock
+	handler handler.ListHandler
+}
+
+func TestListHandler(t *testing.T) {
+	suite.Run(t, new(listHandlerSuite))
+}
+
+func (r *listHandlerSuite) SetupTest() {
+	r.ctx = context.Background()
+	r.gateway = new(gateway.HttpGatewayMock)
+	r.handler = handler.NewList(r.gateway)
+}
+
+func (r *listHandlerSuite) TearDownTest() {
+	r.gateway.AssertExpectations(r.T())
+}
+
+func (r *listHandlerSuite) TestSuccess() {
 	versions := []domain.GoVersionResponse{
 		{Version: "1.16"}, {Version: "1.17"}, {Version: "1.18"},
 		{Version: "1.19"}, {Version: "1.20"}, {Version: "1.21"},
 	}
-	mockHttpGateway.On("GetVersions", ctx).Return(versions, nil)
-	listHandler := handler.NewList(mockHttpGateway)
+	r.gateway.On("GetVersions", r.ctx).Return(versions, nil)
 
-	output, err := util.CaptureOutput(func() error {
-		err := listHandler.Handle(ctx)
+	output, err := test.CaptureOutput(func() error {
+		err := r.handler.Handle(r.ctx)
 		return err
 	})
 
-	assert.NoError(t, err)
-	assert.Contains(t, output, fmt.Sprintf("Available Go versions for %s/%s", runtime.GOOS, runtime.GOARCH))
+	r.NoError(err)
+	r.Equal("====================================================================================================\nAvailable Go versions for linux/amd64 \n====================================================================================================\n1.16           1.17           1.18           1.19           1.20           1.21           \n====================================================================================================\n* currently in use\n====================================================================================================\n", output)
 }
 
-func TestHandle_GetVersionsError(t *testing.T) {
-	ctx := context.Background()
-	mockHttpGateway := new(gateway.MockHttpGateway)
-	mockHttpGateway.On("GetVersions", ctx).Return([]domain.GoVersionResponse{}, errors.New("gateway error"))
+func (r *listHandlerSuite) TestError() {
+	r.gateway.On("GetVersions", r.ctx).Return([]domain.GoVersionResponse{}, errors.New("gateway error"))
 
-	listHandler := handler.NewList(mockHttpGateway)
+	output, err := test.CaptureOutput(func() error {
+		err := r.handler.Handle(r.ctx)
+		return err
+	})
 
-	err := listHandler.Handle(ctx)
-
-	assert.Error(t, err)
-	assert.Equal(t, "gateway error", err.Error())
+	r.Error(err)
+	r.EqualError(err, "gateway error")
+	r.Empty(output)
 }

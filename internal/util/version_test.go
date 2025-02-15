@@ -12,7 +12,7 @@ import (
 func TestVersion(t *testing.T) {
 	assert.Equal(
 		t,
-		fmt.Sprintf("0.0.1 %s/%s", runtime.GOOS, runtime.GOARCH),
+		fmt.Sprintf("0.0.2 %s/%s", runtime.GOOS, runtime.GOARCH),
 		util.GoVersionManager,
 	)
 }

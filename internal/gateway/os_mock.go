@@ -98,5 +98,5 @@ func (f *FileInfoMock) Size() int64 {
 
 func (f *FileInfoMock) Sys() any {
 	args := f.Called()
-	return args.Get(0).(any)
+	return args.Get(0)
 }

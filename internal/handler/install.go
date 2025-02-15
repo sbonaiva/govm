@@ -87,12 +87,12 @@ func (r *installHandler) checkVersion(ctx context.Context, install *domain.Insta
 }
 
 func (r *installHandler) downloadVersion(ctx context.Context, install *domain.Install) error {
-	if err := os.Remove(install.DownloadDir()); err != nil && !os.IsNotExist(err) {
+	if err := r.osGateway.RemoveDir(install.DownloadDir()); err != nil && !os.IsNotExist(err) {
 		slog.ErrorContext(ctx, "Removing previous download", slog.String("Install", "downloadVersion"), slog.String("error", err.Error()))
 		return domain.ErrUnexpected
 	}
 
-	file, err := os.Create(install.DownloadDir())
+	file, err := r.osGateway.CreateFile(install.DownloadDir())
 	if err != nil {
 		slog.ErrorContext(ctx, "Allocating resources", slog.String("Install", "downloadVersion"), slog.String("error", err.Error()))
 		return domain.ErrUnexpected
@@ -114,7 +114,7 @@ func (r *installHandler) checksum(ctx context.Context, install *domain.Install) 
 		return domain.ErrUnexpected
 	}
 
-	file, err := os.Open(install.DownloadDir())
+	file, err := r.osGateway.OpenFile(install.DownloadDir())
 	if err != nil {
 		slog.ErrorContext(ctx, "Opening file", slog.String("Install", "checksum"), slog.String("error", err.Error()))
 		return domain.ErrUnexpected
@@ -136,7 +136,7 @@ func (r *installHandler) checksum(ctx context.Context, install *domain.Install) 
 }
 
 func (r *installHandler) removePreviousVersion(ctx context.Context, install *domain.Install) error {
-	if err := os.RemoveAll(install.HomeGoDir()); err != nil && !os.IsNotExist(err) {
+	if err := r.osGateway.RemoveDir(install.HomeGoDir()); err != nil && !os.IsNotExist(err) {
 		slog.ErrorContext(ctx, "Removing previous version", slog.String("Install", "removePreviousVersion"), slog.String("error", err.Error()))
 		return domain.ErrUnexpected
 	}
@@ -144,7 +144,7 @@ func (r *installHandler) removePreviousVersion(ctx context.Context, install *dom
 }
 
 func (r *installHandler) untarFiles(ctx context.Context, install *domain.Install) error {
-	if err := os.Mkdir(install.HomeGovmDir(), 0755); err != nil && !os.IsExist(err) {
+	if err := r.osGateway.CreateDir(install.HomeGovmDir(), 0755); err != nil && !os.IsExist(err) {
 		slog.ErrorContext(ctx, "Creating directory", slog.String("Install", "untar"), slog.String("error", err.Error()))
 		return domain.ErrUnexpected
 	}

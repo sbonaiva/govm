@@ -25,14 +25,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	logPath := path.Join(user.HomeDir, logDir, logFile)
+	logFilePath := path.Join(user.HomeDir, logDir, logFile)
 
-	if err := os.Remove(logPath); err != nil && !os.IsNotExist(err) {
+	if err := os.Remove(logFilePath); err != nil && !os.IsNotExist(err) {
 		util.PrintError("Failed to remove log file")
 		os.Exit(1)
 	}
 
-	logFile, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	logFile, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		util.PrintError("Failed to create log file")
 		os.Exit(1)

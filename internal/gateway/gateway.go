@@ -23,6 +23,12 @@ func NewHttpGateway() HttpGateway {
 
 type OsGateway interface {
 	GetUserHomeDir() (string, error)
+	CreateDir(path string, perm os.FileMode) error
+	RemoveDir(path string) error
+	CreateFile(path string) (*os.File, error)
+	OpenFile(path string) (*os.File, error)
+	RemoveFile(path string) error
+	GetEnv(key string) string
 }
 
 func NewOsGateway() OsGateway {

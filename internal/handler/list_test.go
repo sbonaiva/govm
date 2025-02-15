@@ -3,6 +3,9 @@ package handler_test
 import (
 	"context"
 	"errors"
+	"fmt"
+	"runtime"
+	"strings"
 	"testing"
 
 	"github.com/sbonaiva/govm/internal/domain"
@@ -34,19 +37,35 @@ func (r *listHandlerSuite) TearDownTest() {
 }
 
 func (r *listHandlerSuite) TestSuccess() {
-	versions := []domain.GoVersionResponse{
-		{Version: "1.16"}, {Version: "1.17"}, {Version: "1.18"},
-		{Version: "1.19"}, {Version: "1.20"}, {Version: "1.21"},
-	}
-	r.gateway.On("GetVersions", r.ctx).Return(versions, nil)
+	r.gateway.On("GetVersions", r.ctx).Return([]domain.GoVersionResponse{
+		{Version: "1.16"},
+		{Version: "1.17"},
+		{Version: "1.18"},
+		{Version: "1.19"},
+		{Version: "1.20"},
+		{Version: "1.21"},
+	}, nil)
 
 	output, err := test.CaptureOutput(func() error {
 		err := r.handler.Handle(r.ctx)
 		return err
 	})
 
+	expected := strings.Join(
+		[]string{
+			strings.Repeat("=", 100) + "\n",
+			"Available Go versions for %s/%s \n",
+			strings.Repeat("=", 100) + "\n",
+			"1.16           1.17           1.18           1.19           1.20           1.21           \n",
+			strings.Repeat("=", 100) + "\n",
+			"* currently in use\n",
+			strings.Repeat("=", 100) + "\n",
+		},
+		"",
+	)
+
 	r.NoError(err)
-	r.Equal("====================================================================================================\nAvailable Go versions for linux/amd64 \n====================================================================================================\n1.16           1.17           1.18           1.19           1.20           1.21           \n====================================================================================================\n* currently in use\n====================================================================================================\n", output)
+	r.Equal(fmt.Sprintf(expected, runtime.GOOS, runtime.GOARCH), output)
 }
 
 func (r *listHandlerSuite) TestError() {

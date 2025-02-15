@@ -24,5 +24,5 @@ func PrintError(message string, args ...any) {
 	if len(args) > 0 {
 		message = fmt.Sprintf(message, args...)
 	}
-	fmt.Printf(color.RedString("Error: %s\n"), message)
+	fmt.Println(color.RedString(message))
 }

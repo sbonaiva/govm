@@ -20,7 +20,7 @@ func (r Install) Filename() string {
 	return fmt.Sprintf("%s.%s-%s.tar.gz", r.Version, runtime.GOOS, runtime.GOARCH)
 }
 
-func (r Install) DownloadDir() string {
+func (r Install) DownloadFile() string {
 	return filepath.Join(os.TempDir(), r.Filename())
 }
 

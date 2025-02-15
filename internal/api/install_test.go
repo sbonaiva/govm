@@ -59,7 +59,7 @@ func (r *installCmdSuite) TestErrorHandling() {
 	})
 
 	// Assert
-	r.Equal("Error: install error\n", output)
+	r.Equal("install error\n", output)
 }
 
 func (r *installCmdSuite) TestInvalidArguments() {

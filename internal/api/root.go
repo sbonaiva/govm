@@ -31,7 +31,7 @@ func NewRootCmd(
 			instance.AddCommand(
 				NewListCmd(ctx, handler.NewList(httpGateway)),
 				NewInstallCmd(ctx, handler.NewInstall(httpGateway, osGateway)),
-				NewUninstallCmd(ctx, handler.NewUninstall()),
+				NewUninstallCmd(ctx, handler.NewUninstall(osGateway)),
 				NewUseCmd(ctx, handler.NewUse(httpGateway)),
 			)
 		}

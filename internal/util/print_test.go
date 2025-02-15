@@ -46,14 +46,14 @@ func TestPrint(t *testing.T) {
 			name:     "Print Error No Args",
 			function: util.PrintError,
 			input:    "Error",
-			expected: "Error: Error\n",
+			expected: "Error\n",
 		},
 		{
 			name:      "Print Error With Args",
 			function:  util.PrintError,
 			input:     "Error %s",
 			inputArgs: []any{"With Args"},
-			expected:  "Error: Error With Args\n",
+			expected:  "Error With Args\n",
 		},
 	}
 

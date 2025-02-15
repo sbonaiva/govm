@@ -18,8 +18,21 @@ const (
 	goDownloadURL = "https://go.dev/dl/%s"
 )
 
+type HttpGateway interface {
+	GetVersions(ctx context.Context) ([]domain.GoVersionResponse, error)
+	GetChecksum(ctx context.Context, version string) (string, error)
+	VersionExists(ctx context.Context, version string) (bool, error)
+	DownloadVersion(ctx context.Context, install domain.Install, file *os.File) error
+}
+
 type httpClient struct {
 	client *http.Client
+}
+
+func NewHttpGateway() HttpGateway {
+	return &httpClient{
+		client: &http.Client{},
+	}
 }
 
 func (r *httpClient) GetVersions(ctx context.Context) ([]domain.GoVersionResponse, error) {

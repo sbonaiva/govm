@@ -60,5 +60,5 @@ func (r *listCmdSuite) TestErrorHandling() {
 	})
 
 	// Assert
-	r.Equal("Error: list error\n", output)
+	r.Equal("list error\n", output)
 }

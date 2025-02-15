@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
@@ -36,7 +34,7 @@ func NewInstall(httpGateway gateway.HttpGateway, osGateway gateway.OsGateway) In
 func (r *installHandler) Handle(ctx context.Context, install *domain.Install) error {
 	slog.InfoContext(ctx, "Installing Go version", slog.String("Install", "Execute"), slog.String("version", install.Version))
 
-	spn := spinner.New(spinner.CharSets[11], 100*time.Millisecond, spinner.WithWriter(os.Stderr))
+	spn := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
 	defer spn.Stop()
 	spn.Start()
 
@@ -67,7 +65,7 @@ func (r *installHandler) checkUserHome(ctx context.Context, install *domain.Inst
 	homeDir, err := r.osGateway.GetUserHomeDir()
 	if err != nil {
 		slog.ErrorContext(ctx, "Getting current user", slog.String("Install", "home"), slog.String("error", err.Error()))
-		return domain.ErrUnexpected
+		return domain.NewUnexpectedError(domain.ErrCodeInstallCheckUserHome)
 	}
 	install.HomeDir = homeDir
 	return nil
@@ -77,31 +75,31 @@ func (r *installHandler) checkVersion(ctx context.Context, install *domain.Insta
 	ok, err := r.httpGateway.VersionExists(ctx, install.Version)
 	if err != nil {
 		slog.ErrorContext(ctx, "Checking version", slog.String("Install", "checkVersion"), slog.String("error", err.Error()))
-		return domain.ErrUnexpected
+		return domain.NewUnexpectedError(domain.ErrCodeInstallCheckVersion)
 	}
 
 	if !ok {
-		return domain.ErrVersionNotAvailable(install.Version)
+		return domain.NewVersionNotAvailableError(install.Version)
 	}
 	return nil
 }
 
 func (r *installHandler) downloadVersion(ctx context.Context, install *domain.Install) error {
-	if err := r.osGateway.RemoveDir(install.DownloadDir()); err != nil && !os.IsNotExist(err) {
+	if err := r.osGateway.RemoveDir(install.DownloadFile()); err != nil {
 		slog.ErrorContext(ctx, "Removing previous download", slog.String("Install", "downloadVersion"), slog.String("error", err.Error()))
-		return domain.ErrUnexpected
+		return domain.NewUnexpectedError(domain.ErrCodeInstallDownloadRemoveDir)
 	}
 
-	file, err := r.osGateway.CreateFile(install.DownloadDir())
+	file, err := r.osGateway.CreateFile(install.DownloadFile())
 	if err != nil {
 		slog.ErrorContext(ctx, "Allocating resources", slog.String("Install", "downloadVersion"), slog.String("error", err.Error()))
-		return domain.ErrUnexpected
+		return domain.NewUnexpectedError(domain.ErrCodeInstallDownloadCreateFile)
 	}
 	defer file.Close()
 
 	if err := r.httpGateway.DownloadVersion(ctx, *install, file); err != nil {
 		slog.ErrorContext(ctx, "Downloading version", slog.String("Install", "downloadVersion"), slog.String("error", err.Error()))
-		return domain.ErrUnexpected
+		return domain.NewUnexpectedError(domain.ErrCodeInstallDownloadVersion)
 	}
 
 	return nil
@@ -111,62 +109,61 @@ func (r *installHandler) checksum(ctx context.Context, install *domain.Install) 
 	expectedChecksum, err := r.httpGateway.GetChecksum(ctx, install.Version)
 	if err != nil {
 		slog.ErrorContext(ctx, "Getting checksum", slog.String("Install", "checksum"), slog.String("error", err.Error()))
-		return domain.ErrUnexpected
+		return domain.NewUnexpectedError(domain.ErrCodeInstallChecksumDownload)
 	}
 
-	file, err := r.osGateway.OpenFile(install.DownloadDir())
+	file, err := r.osGateway.OpenFile(install.DownloadFile())
 	if err != nil {
 		slog.ErrorContext(ctx, "Opening file", slog.String("Install", "checksum"), slog.String("error", err.Error()))
-		return domain.ErrUnexpected
+		return domain.NewUnexpectedError(domain.ErrCodeInstallChecksumOpenFile)
 	}
 	defer file.Close()
 
 	hash := sha256.New()
 	if _, err := io.Copy(hash, file); err != nil {
 		slog.ErrorContext(ctx, "Calculating checksum", slog.String("Install", "checksum"), slog.String("error", err.Error()))
-		return domain.ErrUnexpected
+		return domain.NewUnexpectedError(domain.ErrCodeInstallChecksumCopy)
 	}
 
 	if expectedChecksum != fmt.Sprintf("%x", hash.Sum(nil)) {
 		slog.ErrorContext(ctx, "Checksum does not match", slog.String("Install", "checksum"))
-		return domain.ErrUnexpected
+		return domain.NewUnexpectedError(domain.ErrCodeInstallChecksumMismatch)
 	}
 
 	return nil
 }
 
 func (r *installHandler) removePreviousVersion(ctx context.Context, install *domain.Install) error {
-	if err := r.osGateway.RemoveDir(install.HomeGoDir()); err != nil && !os.IsNotExist(err) {
+	if err := r.osGateway.RemoveDir(install.HomeGoDir()); err != nil {
 		slog.ErrorContext(ctx, "Removing previous version", slog.String("Install", "removePreviousVersion"), slog.String("error", err.Error()))
-		return domain.ErrUnexpected
+		return domain.NewUnexpectedError(domain.ErrCodeInstallRemovePreviousVersion)
 	}
 	return nil
 }
 
 func (r *installHandler) untarFiles(ctx context.Context, install *domain.Install) error {
-	if err := r.osGateway.CreateDir(install.HomeGovmDir(), 0755); err != nil && !os.IsExist(err) {
+	if err := r.osGateway.CreateDir(install.HomeGovmDir(), 0755); err != nil {
 		slog.ErrorContext(ctx, "Creating directory", slog.String("Install", "untar"), slog.String("error", err.Error()))
-		return domain.ErrUnexpected
+		return domain.NewUnexpectedError(domain.ErrCodeInstallUntarCreateDir)
 	}
 
-	cmd := exec.Command("tar", "-C", install.HomeGovmDir(), "-xzf", install.DownloadDir())
-	if err := cmd.Run(); err != nil {
+	if err := r.osGateway.Untar(install.DownloadFile(), install.HomeGovmDir()); err != nil {
 		slog.ErrorContext(ctx, "Extracting files", slog.String("Install", "untar"), slog.String("error", err.Error()))
-		return domain.ErrUnexpected
+		return domain.NewUnexpectedError(domain.ErrCodeInstallUntarExtract)
 	}
 
-	defer os.Remove(install.DownloadDir())
+	defer r.osGateway.RemoveFile(install.DownloadFile())
 
 	return nil
 }
 
 func (r *installHandler) addToPath(ctx context.Context, install *domain.Install) error {
-	if path := os.Getenv("PATH"); strings.Contains(path, install.HomeGoBinDir()) {
+	if path := r.osGateway.GetEnv("PATH"); strings.Contains(path, install.HomeGoBinDir()) {
 		slog.InfoContext(ctx, "Go is already in PATH", slog.String("Install", "addToPath"))
 		return nil
 	}
 
-	if shell := os.Getenv("SHELL"); shell != "" {
+	if shell := r.osGateway.GetEnv("SHELL"); shell != "" {
 		if rcf, exists := domain.ShellRunCommandsFiles[shell]; exists {
 			return r.addToShellRunCommands(ctx, install, rcf)
 		}
@@ -182,7 +179,7 @@ func (r *installHandler) addToPath(ctx context.Context, install *domain.Install)
 
 	if succeded == 0 {
 		slog.ErrorContext(ctx, "No shell rc file found", slog.String("Install", "addToPath"))
-		return domain.ErrUnexpected
+		return domain.NewUnexpectedError(domain.ErrCodeInstallAddToPathNoShellsFound)
 	}
 
 	return nil
@@ -191,22 +188,22 @@ func (r *installHandler) addToPath(ctx context.Context, install *domain.Install)
 func (r *installHandler) addToShellRunCommands(ctx context.Context, install *domain.Install, rcf string) error {
 	rcfPath := filepath.Join(install.HomeDir, rcf)
 
-	if _, err := os.Stat(rcfPath); err != nil {
+	if _, err := r.osGateway.Stat(rcfPath); err != nil {
 		slog.ErrorContext(ctx, "Checking file", slog.String("Install", "addToShellRunCommands"), slog.String("error", err.Error()))
-		return domain.ErrUnexpected
+		return domain.NewUnexpectedError(domain.ErrCodeInstallAddToPathStat)
 	}
 
-	oldContent, err := os.ReadFile(rcfPath)
+	oldContent, err := r.osGateway.ReadFile(rcfPath)
 	if err != nil {
 		slog.ErrorContext(ctx, "Reading file", slog.String("Install", "addToShellRunCommands"), slog.String("error", err.Error()))
-		return domain.ErrUnexpected
+		return domain.NewUnexpectedError(domain.ErrCodeInstallAddToPathRead)
 	}
 
 	newContent := []byte(fmt.Sprintf("%s\n%s", string(oldContent), install.Export()))
 
-	if err := os.WriteFile(rcfPath, newContent, 0644); err != nil {
+	if err := r.osGateway.WriteFile(rcfPath, newContent, 0644); err != nil {
 		slog.ErrorContext(ctx, "Writing file", slog.String("Install", "addToShellRunCommands"), slog.String("error", err.Error()))
-		return domain.ErrUnexpected
+		return domain.NewUnexpectedError(domain.ErrCodeInstallAddToPathWrite)
 	}
 
 	return nil

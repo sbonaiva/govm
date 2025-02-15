@@ -77,6 +77,6 @@ func (r *listHandlerSuite) TestError() {
 	})
 
 	r.Error(err)
-	r.EqualError(err, "gateway error")
+	r.Equal(domain.NewUnexpectedError(domain.ErrCodeListVersions), err)
 	r.Empty(output)
 }

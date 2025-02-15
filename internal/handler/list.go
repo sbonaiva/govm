@@ -7,6 +7,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/sbonaiva/govm/internal/domain"
 	"github.com/sbonaiva/govm/internal/gateway"
 )
 
@@ -31,7 +32,7 @@ func (r *listHandler) Handle(ctx context.Context) error {
 	versions, err := r.httpGateway.GetVersions(ctx)
 	if err != nil {
 		slog.ErrorContext(ctx, "Error while getting versions", slog.String("List", "Execute"), slog.String("error", err.Error()))
-		return err
+		return domain.NewUnexpectedError(domain.ErrCodeListVersions)
 	}
 
 	fmt.Println(strings.Repeat("=", 100))

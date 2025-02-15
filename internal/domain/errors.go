@@ -8,6 +8,8 @@ const (
 	errMessageUnexpected          = "an unexpected error occurred, please verify govm.log for more information"
 	errMessageVersionNotAvailable = "go version \"%s\" is not available"
 
+	ErrCodeListVersions = 1
+
 	ErrCodeInstallCheckUserHome          = 1
 	ErrCodeInstallCheckVersion           = 2
 	ErrCodeInstallDownloadRemoveDir      = 3

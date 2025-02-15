@@ -8,12 +8,12 @@ import (
 	"strings"
 
 	"github.com/sbonaiva/govm/internal/domain"
-	"github.com/sbonaiva/govm/internal/service"
+	"github.com/sbonaiva/govm/internal/handler"
 	"github.com/sbonaiva/govm/internal/util"
 	"github.com/spf13/cobra"
 )
 
-func NewUninstallCmd(ctx context.Context) *cobra.Command {
+func NewUninstallCmd(ctx context.Context, handler handler.UninstallHandler) *cobra.Command {
 	return &cobra.Command{
 		Use:     "uninstall",
 		Aliases: []string{"u"},
@@ -44,7 +44,7 @@ func NewUninstallCmd(ctx context.Context) *cobra.Command {
 					continue
 				}
 			}
-			if err := service.NewUninstall().Execute(
+			if err := handler.Handle(
 				ctx,
 				&domain.Uninstall{},
 			); err != nil {

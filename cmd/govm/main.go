@@ -3,13 +3,14 @@ package main
 import (
 	"context"
 	"log/slog"
+	"net/http"
 	"os"
 	"os/user"
 	"path"
 
 	"github.com/sbonaiva/govm/internal/api"
+	"github.com/sbonaiva/govm/internal/gateway"
 	"github.com/sbonaiva/govm/internal/util"
-	"github.com/spf13/cobra"
 )
 
 const (
@@ -25,14 +26,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	logPath := path.Join(user.HomeDir, logDir, logFile)
+	logFilePath := path.Join(user.HomeDir, logDir, logFile)
 
-	if err := os.Remove(logPath); err != nil && !os.IsNotExist(err) {
+	if err := os.Remove(logFilePath); err != nil && !os.IsNotExist(err) {
 		util.PrintError("Failed to remove log file")
 		os.Exit(1)
 	}
 
-	logFile, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	logFile, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		util.PrintError("Failed to create log file")
 		os.Exit(1)
@@ -43,17 +44,13 @@ func main() {
 
 	ctx := context.Background()
 
-	rootCmd := &cobra.Command{}
-	rootCmd.Use = "govm"
-	rootCmd.Short = "::: Go Version Manager :::"
-	rootCmd.Version = util.GoVersionManager
-	rootCmd.AddCommand(
-		api.NewListCmd(ctx),
-		api.NewInstallCmd(ctx),
-		api.NewUninstallCmd(ctx),
-	)
+	httpClient := &http.Client{}
+	httpGateway := gateway.NewHttpGateway(httpClient)
+	osGateway := gateway.NewOsGateway()
+	rootCmd := api.NewRootCmd(ctx, httpGateway, osGateway)
 
 	if err := rootCmd.Execute(); err != nil {
 		util.PrintError(err.Error())
+		os.Exit(1)
 	}
 }

@@ -20,7 +20,7 @@ func (r Install) Filename() string {
 	return fmt.Sprintf("%s.%s-%s.tar.gz", r.Version, runtime.GOOS, runtime.GOARCH)
 }
 
-func (r Install) DownloadDir() string {
+func (r Install) DownloadFile() string {
 	return filepath.Join(os.TempDir(), r.Filename())
 }
 
@@ -37,5 +37,9 @@ func (r Install) HomeGoBinDir() string {
 }
 
 func (r Install) Export() string {
-	return fmt.Sprintf("%s\nexport PATH=$PATH:%s\n", comment, r.HomeGoBinDir())
+	return fmt.Sprintf(
+		"%s\nexport PATH=$PATH:%s\nexport GOPATH=$HOME/go\n",
+		comment,
+		r.HomeGoBinDir(),
+	)
 }

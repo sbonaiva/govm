@@ -8,5 +8,5 @@ import (
 var GoVersionManager string
 
 func init() {
-	GoVersionManager = fmt.Sprintf("%s %s %s", "0.0.1", runtime.GOOS, runtime.GOARCH)
+	GoVersionManager = fmt.Sprintf("%s %s/%s", "0.0.2", runtime.GOOS, runtime.GOARCH)
 }

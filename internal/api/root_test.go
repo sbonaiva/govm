@@ -2,6 +2,8 @@ package api_test
 
 import (
 	"context"
+	"fmt"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -39,6 +41,7 @@ func TestRootCmd(t *testing.T) {
 	}, "")
 
 	// Assert
-	assert.Equal(t, expected, actual)
 	assert.NoError(t, err)
+	assert.Equal(t, expected, actual)
+	assert.Equal(t, fmt.Sprintf("0.0.2 %s/%s", runtime.GOOS, runtime.GOARCH), cmd.Version)
 }

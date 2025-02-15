@@ -2,11 +2,12 @@ package api
 
 import (
 	"context"
+	"fmt"
+	"runtime"
 	"sync"
 
 	"github.com/sbonaiva/govm/internal/gateway"
 	"github.com/sbonaiva/govm/internal/handler"
-	"github.com/sbonaiva/govm/internal/util"
 	"github.com/spf13/cobra"
 )
 
@@ -25,7 +26,7 @@ func NewRootCmd(
 			instance = &cobra.Command{
 				Use:     "govm",
 				Short:   "::: Go Version Manager :::",
-				Version: util.GoVersionManager,
+				Version: fmt.Sprintf("%s %s/%s", "0.0.2", runtime.GOOS, runtime.GOARCH),
 			}
 
 			instance.AddCommand(

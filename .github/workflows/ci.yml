@@ -33,6 +33,12 @@ jobs:
     - name: Test
       run: make test
 
+    - name: Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: ./coverage.out
+
     - name: Publish Report
       uses: actions/upload-artifact@v4
       with:

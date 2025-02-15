@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log/slog"
+	"net/http"
 	"os"
 	"os/user"
 	"path"
@@ -43,7 +44,8 @@ func main() {
 
 	ctx := context.Background()
 
-	httpGateway := gateway.NewHttpGateway()
+	httpClient := &http.Client{}
+	httpGateway := gateway.NewHttpGateway(httpClient)
 	osGateway := gateway.NewOsGateway()
 	rootCmd := api.NewRootCmd(ctx, httpGateway, osGateway)
 

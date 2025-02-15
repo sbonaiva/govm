@@ -32,7 +32,6 @@ func NewRootCmd(
 				NewListCmd(ctx, handler.NewList(httpGateway)),
 				NewInstallCmd(ctx, handler.NewInstall(httpGateway, osGateway)),
 				NewUninstallCmd(ctx, handler.NewUninstall(osGateway)),
-				NewUseCmd(ctx, handler.NewUse(httpGateway)),
 			)
 		}
 	})

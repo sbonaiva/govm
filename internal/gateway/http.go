@@ -29,9 +29,9 @@ type httpClient struct {
 	client *http.Client
 }
 
-func NewHttpGateway() HttpGateway {
+func NewHttpGateway(client *http.Client) HttpGateway {
 	return &httpClient{
-		client: &http.Client{},
+		client: client,
 	}
 }
 

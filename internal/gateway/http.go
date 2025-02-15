@@ -13,11 +13,6 @@ import (
 	"github.com/sbonaiva/govm/internal/domain"
 )
 
-const (
-	goVersionsURL = "https://go.dev/dl/?mode=json&include=all"
-	goDownloadURL = "https://go.dev/dl/%s"
-)
-
 type HttpGateway interface {
 	GetVersions(ctx context.Context) ([]domain.GoVersionResponse, error)
 	GetChecksum(ctx context.Context, version string) (string, error)
@@ -25,18 +20,25 @@ type HttpGateway interface {
 	DownloadVersion(ctx context.Context, install domain.Install, file *os.File) error
 }
 
+type HttpConfig struct {
+	GoVersionURL  string
+	GoDownloadURL string
+}
+
 type httpClient struct {
+	config *HttpConfig
 	client *http.Client
 }
 
-func NewHttpGateway(client *http.Client) HttpGateway {
+func NewHttpGateway(config *HttpConfig) HttpGateway {
 	return &httpClient{
-		client: client,
+		client: http.DefaultClient,
+		config: config,
 	}
 }
 
 func (r *httpClient) GetVersions(ctx context.Context) ([]domain.GoVersionResponse, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, goVersionsURL, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, r.config.GoVersionURL, nil)
 	if err != nil {
 		slog.ErrorContext(ctx, "Error while creating request", slog.String("GoDevClient", "GetVersions"), slog.String("error", err.Error()))
 		return []domain.GoVersionResponse{}, err
@@ -106,7 +108,7 @@ func (r *httpClient) VersionExists(ctx context.Context, version string) (bool, e
 }
 
 func (r *httpClient) DownloadVersion(ctx context.Context, install domain.Install, file *os.File) error {
-	resp, err := r.client.Get(fmt.Sprintf(goDownloadURL, install.Filename()))
+	resp, err := r.client.Get(fmt.Sprintf(r.config.GoDownloadURL, install.Filename()))
 	if err != nil {
 		slog.ErrorContext(ctx, "Error while downloading file", slog.String("GoDevClient", "DownloadVersion"), slog.String("error", err.Error()))
 		return err

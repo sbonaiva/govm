@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"log/slog"
-	"net/http"
 	"os"
 	"os/user"
 	"path"
@@ -14,8 +13,10 @@ import (
 )
 
 const (
-	logDir  = ".govm"
-	logFile = "govm.log"
+	logDir        = ".govm"
+	logFile       = "govm.log"
+	goVersionsURL = "https://go.dev/dl/?mode=json&include=all"
+	goDownloadURL = "https://go.dev/dl/%s"
 )
 
 func main() {
@@ -44,8 +45,10 @@ func main() {
 
 	ctx := context.Background()
 
-	httpClient := &http.Client{}
-	httpGateway := gateway.NewHttpGateway(httpClient)
+	httpGateway := gateway.NewHttpGateway(&gateway.HttpConfig{
+		GoVersionURL:  goVersionsURL,
+		GoDownloadURL: goDownloadURL,
+	})
 	osGateway := gateway.NewOsGateway()
 	rootCmd := api.NewRootCmd(ctx, httpGateway, osGateway)
 

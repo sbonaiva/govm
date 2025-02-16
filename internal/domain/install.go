@@ -38,8 +38,9 @@ func (r Install) HomeGoBinDir() string {
 
 func (r Install) Export() string {
 	return fmt.Sprintf(
-		"%s\nexport PATH=$PATH:%s\nexport GOPATH=$HOME/go\n",
+		"%s\nexport PATH=$PATH:%s\nexport GOPATH=$HOME/go\nexport GOROOT=%s\n",
 		comment,
 		r.HomeGoBinDir(),
+		r.HomeGoDir(),
 	)
 }

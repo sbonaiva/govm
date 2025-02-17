@@ -39,6 +39,11 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: ./coverage.out
 
+    - name: SonarQube
+      uses: SonarSource/sonarqube-scan-action@v4
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
     - name: Publish Report
       uses: actions/upload-artifact@v4
       with:

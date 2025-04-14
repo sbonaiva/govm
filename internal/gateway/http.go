@@ -14,10 +14,10 @@ import (
 )
 
 type HttpGateway interface {
-	GetVersions(ctx context.Context) ([]domain.GoVersionResponse, error)
+	GetVersions(ctx context.Context) (domain.VersionsResponse, error)
 	GetChecksum(ctx context.Context, version string) (string, error)
 	VersionExists(ctx context.Context, version string) (bool, error)
-	DownloadVersion(ctx context.Context, install domain.Install, file *os.File) error
+	DownloadVersion(ctx context.Context, action *domain.Action, file *os.File) error
 }
 
 type HttpConfig struct {
@@ -37,32 +37,32 @@ func NewHttpGateway(config *HttpConfig) HttpGateway {
 	}
 }
 
-func (r *httpClient) GetVersions(ctx context.Context) ([]domain.GoVersionResponse, error) {
+func (r *httpClient) GetVersions(ctx context.Context) (domain.VersionsResponse, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, r.config.GoVersionURL, nil)
 	if err != nil {
 		slog.ErrorContext(ctx, "Error while creating request", slog.String("GoDevClient", "GetVersions"), slog.String("error", err.Error()))
-		return []domain.GoVersionResponse{}, err
+		return domain.VersionsResponse{}, err
 	}
 
 	resp, err := r.client.Do(req)
 	if err != nil {
 		slog.ErrorContext(ctx, "Error while making request", slog.String("GoDevClient", "GetVersions"), slog.String("error", err.Error()))
-		return []domain.GoVersionResponse{}, err
+		return domain.VersionsResponse{}, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		slog.ErrorContext(ctx, "Unexpected status code", slog.String("GoDevClient", "GetVersions"), slog.String("status", resp.Status))
-		return []domain.GoVersionResponse{}, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		return domain.VersionsResponse{}, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
-	var versions []domain.GoVersionResponse
+	var versions []domain.VersionResponse
 	if err := json.NewDecoder(resp.Body).Decode(&versions); err != nil {
 		slog.ErrorContext(ctx, "Error decoding body", slog.String("GoDevClient", "GetVersions"), slog.String("error", err.Error()))
-		return []domain.GoVersionResponse{}, err
+		return domain.VersionsResponse{}, err
 	}
 
-	compatibleVersions := make([]domain.GoVersionResponse, 0, len(versions))
+	compatibleVersions := make([]domain.VersionResponse, 0, len(versions))
 
 	for _, v := range versions {
 		if v.IsCompatible() && v.Stable {
@@ -70,16 +70,18 @@ func (r *httpClient) GetVersions(ctx context.Context) ([]domain.GoVersionRespons
 		}
 	}
 
-	return compatibleVersions, nil
+	return domain.VersionsResponse{
+		Versions: compatibleVersions,
+	}, nil
 }
 
 func (r *httpClient) GetChecksum(ctx context.Context, version string) (string, error) {
-	versions, err := r.GetVersions(ctx)
+	res, err := r.GetVersions(ctx)
 	if err != nil {
 		return "", err
 	}
 
-	for _, v := range versions {
+	for _, v := range res.Versions {
 		if v.Version == version {
 			for _, f := range v.Files {
 				if f.Kind == "archive" && f.OS == runtime.GOOS && f.Arch == runtime.GOARCH {
@@ -93,12 +95,12 @@ func (r *httpClient) GetChecksum(ctx context.Context, version string) (string, e
 }
 
 func (r *httpClient) VersionExists(ctx context.Context, version string) (bool, error) {
-	versions, err := r.GetVersions(ctx)
+	res, err := r.GetVersions(ctx)
 	if err != nil {
 		return false, err
 	}
 
-	for _, v := range versions {
+	for _, v := range res.Versions {
 		if v.Version == version && v.IsCompatible() && v.Stable {
 			return true, nil
 		}
@@ -107,8 +109,8 @@ func (r *httpClient) VersionExists(ctx context.Context, version string) (bool, e
 	return false, err
 }
 
-func (r *httpClient) DownloadVersion(ctx context.Context, install domain.Install, file *os.File) error {
-	resp, err := r.client.Get(fmt.Sprintf(r.config.GoDownloadURL, install.Filename()))
+func (r *httpClient) DownloadVersion(ctx context.Context, action *domain.Action, file *os.File) error {
+	resp, err := r.client.Get(fmt.Sprintf(r.config.GoDownloadURL, action.Filename()))
 	if err != nil {
 		slog.ErrorContext(ctx, "Error while downloading file", slog.String("GoDevClient", "DownloadVersion"), slog.String("error", err.Error()))
 		return err

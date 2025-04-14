@@ -18,7 +18,7 @@ func NewInstallCmd(ctx context.Context, handler handler.InstallHandler) *cobra.C
 		Example: "govm install [version]",
 		Args:    cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := handler.Handle(ctx, &domain.Install{Version: args[0]}); err != nil {
+			if err := handler.Handle(ctx, &domain.Action{Version: args[0]}); err != nil {
 				util.PrintError(err.Error())
 				return
 			}

@@ -37,13 +37,15 @@ func (r *listHandlerSuite) TearDownTest() {
 }
 
 func (r *listHandlerSuite) TestSuccess() {
-	r.gateway.On("GetVersions", r.ctx).Return([]domain.GoVersionResponse{
-		{Version: "1.16"},
-		{Version: "1.17"},
-		{Version: "1.18"},
-		{Version: "1.19"},
-		{Version: "1.20"},
-		{Version: "1.21"},
+	r.gateway.On("GetVersions", r.ctx).Return(domain.VersionsResponse{
+		Versions: []domain.VersionResponse{
+			{Version: "1.16"},
+			{Version: "1.17"},
+			{Version: "1.18"},
+			{Version: "1.19"},
+			{Version: "1.20"},
+			{Version: "1.21"},
+		},
 	}, nil)
 
 	output, err := test.CaptureOutput(func() error {
@@ -69,7 +71,7 @@ func (r *listHandlerSuite) TestSuccess() {
 }
 
 func (r *listHandlerSuite) TestError() {
-	r.gateway.On("GetVersions", r.ctx).Return([]domain.GoVersionResponse{}, errors.New("gateway error"))
+	r.gateway.On("GetVersions", r.ctx).Return(domain.VersionsResponse{}, errors.New("gateway error"))
 
 	output, err := test.CaptureOutput(func() error {
 		err := r.handler.Handle(r.ctx)

@@ -7,11 +7,11 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-type InstallHandlerMock struct {
+type UpdateHandlerMock struct {
 	mock.Mock
 }
 
-func (m *InstallHandlerMock) Handle(ctx context.Context, install *domain.Action) error {
-	args := m.Called(ctx, install)
+func (m *UpdateHandlerMock) Handle(ctx context.Context, update *domain.Action) error {
+	args := m.Called(ctx, update)
 	return args.Error(0)
 }

@@ -46,7 +46,7 @@ func NewUninstallCmd(ctx context.Context, handler handler.UninstallHandler) *cob
 			}
 			if err := handler.Handle(
 				ctx,
-				&domain.Uninstall{},
+				&domain.Action{},
 			); err != nil {
 				util.PrintError(err.Error())
 				return

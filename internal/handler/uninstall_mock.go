@@ -11,7 +11,7 @@ type UninstallHandlerMock struct {
 	mock.Mock
 }
 
-func (m *UninstallHandlerMock) Handle(ctx context.Context, uninstall *domain.Uninstall) error {
+func (m *UninstallHandlerMock) Handle(ctx context.Context, uninstall *domain.Action) error {
 	args := m.Called(ctx, uninstall)
 	return args.Error(0)
 }

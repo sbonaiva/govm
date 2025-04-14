@@ -17,11 +17,11 @@ import (
 func TestGetVersionsSuccess(t *testing.T) {
 	// Arrange
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		versions := []domain.GoVersionResponse{
+		versions := []domain.VersionResponse{
 			{
 				Version: "1.17",
 				Stable:  true,
-				Files: []domain.GoFileResponse{
+				Files: []domain.FileResponse{
 					{Kind: "archive", OS: "linux", Arch: "amd64", SHA256: "dummychecksum"},
 					{Kind: "archive", OS: "linux", Arch: "arm64", SHA256: "dummychecksum"},
 					{Kind: "archive", OS: "darwin", Arch: "amd64", SHA256: "dummychecksum"},
@@ -48,9 +48,9 @@ func TestGetVersionsSuccess(t *testing.T) {
 
 	// Assert
 	assert.NoError(t, err)
-	assert.Len(t, result, 1)
-	assert.Equal(t, "1.17", result[0].Version)
-	assert.Len(t, result[0].Files, 4)
+	assert.Len(t, result.Versions, 1)
+	assert.Equal(t, "1.17", result.Versions[0].Version)
+	assert.Len(t, result.Versions[0].Files, 4)
 }
 
 func TestGetVersionsErrorCreatingRequest(t *testing.T) {
@@ -115,17 +115,17 @@ func TestGetVersionsErrorDecode(t *testing.T) {
 
 	// Assert
 	assert.Error(t, err)
-	assert.Equal(t, "json: cannot unmarshal string into Go value of type []domain.GoVersionResponse", err.Error())
+	assert.Equal(t, "json: cannot unmarshal string into Go value of type []domain.VersionResponse", err.Error())
 }
 
 func TestGetChecksumVersionFound(t *testing.T) {
 	// Arrange
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		versions := []domain.GoVersionResponse{
+		versions := []domain.VersionResponse{
 			{
 				Version: "1.17",
 				Stable:  true,
-				Files: []domain.GoFileResponse{
+				Files: []domain.FileResponse{
 					{Kind: "archive", OS: "linux", Arch: "amd64", SHA256: "dummychecksum"},
 					{Kind: "archive", OS: "linux", Arch: "arm64", SHA256: "dummychecksum"},
 					{Kind: "archive", OS: "darwin", Arch: "amd64", SHA256: "dummychecksum"},
@@ -158,11 +158,11 @@ func TestGetChecksumVersionFound(t *testing.T) {
 func TestGetChecksumVersionNotFound(t *testing.T) {
 	// Arrange
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		versions := []domain.GoVersionResponse{
+		versions := []domain.VersionResponse{
 			{
 				Version: "1.16",
 				Stable:  true,
-				Files: []domain.GoFileResponse{
+				Files: []domain.FileResponse{
 					{Kind: "archive", OS: "linux", Arch: "amd64", SHA256: "dummychecksum"},
 					{Kind: "archive", OS: "linux", Arch: "arm64", SHA256: "dummychecksum"},
 					{Kind: "archive", OS: "darwin", Arch: "amd64", SHA256: "dummychecksum"},
@@ -221,11 +221,11 @@ func TestGetChecksumUnexpectedStatusCode(t *testing.T) {
 func TestVersionExistsVersionFound(t *testing.T) {
 	// Arrange
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		versions := []domain.GoVersionResponse{
+		versions := []domain.VersionResponse{
 			{
 				Version: "1.17",
 				Stable:  true,
-				Files: []domain.GoFileResponse{
+				Files: []domain.FileResponse{
 					{Kind: "archive", OS: "linux", Arch: "amd64", SHA256: "dummychecksum"},
 					{Kind: "archive", OS: "linux", Arch: "arm64", SHA256: "dummychecksum"},
 					{Kind: "archive", OS: "darwin", Arch: "amd64", SHA256: "dummychecksum"},
@@ -258,11 +258,11 @@ func TestVersionExistsVersionFound(t *testing.T) {
 func TestVersionExistsVersionNotFound(t *testing.T) {
 	// Arrange
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		versions := []domain.GoVersionResponse{
+		versions := []domain.VersionResponse{
 			{
 				Version: "1.16",
 				Stable:  true,
-				Files: []domain.GoFileResponse{
+				Files: []domain.FileResponse{
 					{Kind: "archive", OS: "linux", Arch: "amd64", SHA256: "dummychecksum"},
 					{Kind: "archive", OS: "linux", Arch: "arm64", SHA256: "dummychecksum"},
 					{Kind: "archive", OS: "darwin", Arch: "amd64", SHA256: "dummychecksum"},
@@ -339,7 +339,7 @@ func TestDownloadVersion_Success(t *testing.T) {
 	defer os.Remove(file.Name())
 
 	// Act
-	err = gatewayInstance.DownloadVersion(context.Background(), domain.Install{Version: "1.17"}, file)
+	err = gatewayInstance.DownloadVersion(context.Background(), &domain.Action{Version: "1.17"}, file)
 
 	// Assert
 	assert.NoError(t, err)
@@ -368,7 +368,7 @@ func TestDownloadVersion_ErrorDownloading(t *testing.T) {
 	defer os.Remove(file.Name())
 
 	// Act
-	err = gatewayInstance.DownloadVersion(context.Background(), domain.Install{Version: "1.17"}, file)
+	err = gatewayInstance.DownloadVersion(context.Background(), &domain.Action{Version: "1.17"}, file)
 
 	// Assert
 	assert.Error(t, err)

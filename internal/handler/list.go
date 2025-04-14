@@ -27,11 +27,11 @@ func NewList(httpGateway gateway.HttpGateway) ListHandler {
 
 func (r *listHandler) Handle(ctx context.Context) error {
 
-	slog.InfoContext(ctx, "Listing all Go versions", slog.String("List", "Execute"))
+	slog.InfoContext(ctx, "Listing all Go versions", slog.String("ListHandler", "Handle"))
 
-	versions, err := r.httpGateway.GetVersions(ctx)
+	res, err := r.httpGateway.GetVersions(ctx)
 	if err != nil {
-		slog.ErrorContext(ctx, "Error while getting versions", slog.String("List", "Execute"), slog.String("error", err.Error()))
+		slog.ErrorContext(ctx, "Error while getting versions", slog.String("ListHandler", "Handle"), slog.String("error", err.Error()))
 		return domain.NewUnexpectedError(domain.ErrCodeListVersions)
 	}
 
@@ -40,14 +40,14 @@ func (r *listHandler) Handle(ctx context.Context) error {
 	fmt.Println(strings.Repeat("=", 100))
 
 	numCols := 6
-	maxRows := (len(versions) + numCols - 1) / numCols
+	maxRows := (len(res.Versions) + numCols - 1) / numCols
 
 	for i := 0; i < maxRows; i++ {
 		var row []string
 		for j := 0; j < numCols; j++ {
 			idx := i + j*maxRows
-			if idx < len(versions) {
-				row = append(row, fmt.Sprintf("%-15s", versions[idx].String()))
+			if idx < len(res.Versions) {
+				row = append(row, fmt.Sprintf("%-15s", res.Versions[idx].String()))
 			}
 		}
 		fmt.Println(strings.Join(row, ""))

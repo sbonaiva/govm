@@ -8,6 +8,7 @@ import (
 
 	"github.com/sbonaiva/govm/internal/gateway"
 	"github.com/sbonaiva/govm/internal/handler"
+	"github.com/sbonaiva/govm/internal/service"
 	"github.com/spf13/cobra"
 )
 
@@ -16,11 +17,7 @@ var (
 	once     sync.Once
 )
 
-func NewRootCmd(
-	ctx context.Context,
-	httpGateway gateway.HttpGateway,
-	osGateway gateway.OsGateway,
-) *cobra.Command {
+func NewRootCmd(ctx context.Context, httpGateway gateway.HttpGateway, osGateway gateway.OsGateway) *cobra.Command {
 	once.Do(func() {
 		if instance == nil {
 			instance = &cobra.Command{
@@ -29,10 +26,13 @@ func NewRootCmd(
 				Version: fmt.Sprintf("%s %s/%s", "0.0.2", runtime.GOOS, runtime.GOARCH),
 			}
 
+			sharedSvc := service.NewShared(httpGateway, osGateway)
+
 			instance.AddCommand(
 				NewListCmd(ctx, handler.NewList(httpGateway)),
-				NewInstallCmd(ctx, handler.NewInstall(httpGateway, osGateway)),
-				NewUninstallCmd(ctx, handler.NewUninstall(osGateway)),
+				NewInstallCmd(ctx, handler.NewInstall(sharedSvc)),
+				NewUninstallCmd(ctx, handler.NewUninstall(sharedSvc)),
+				NewUpdateCmd(ctx, handler.NewUpdate(sharedSvc)),
 			)
 		}
 	})

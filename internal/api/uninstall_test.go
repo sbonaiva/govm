@@ -37,7 +37,7 @@ func (r *uninstallCmdSuite) TearDownTest() {
 
 func (r *uninstallCmdSuite) TestSuccess() {
 	// Arrange
-	r.handler.On("Handle", r.ctx, &domain.Uninstall{}).Return(nil)
+	r.handler.On("Handle", r.ctx, &domain.Action{}).Return(nil)
 
 	input := []byte("y")
 	rdr, wtr, err := os.Pipe()
@@ -67,7 +67,7 @@ func (r *uninstallCmdSuite) TestSuccess() {
 
 func (r *uninstallCmdSuite) TestError() {
 	// Arrange
-	r.handler.On("Handle", r.ctx, &domain.Uninstall{}).Return(errors.New("uninstall error"))
+	r.handler.On("Handle", r.ctx, &domain.Action{}).Return(errors.New("uninstall error"))
 
 	input := []byte("y")
 	rdr, wtr, err := os.Pipe()

@@ -7,14 +7,14 @@ import (
 )
 
 func GetInstalledGoVersion() (string, error) {
-	outputBytes, err := exec.Command("go", "version").Output()
+	outputBytes, err := exec.Command("go", "version").CombinedOutput()
 	if err != nil {
-		return "", errors.New("no go version found")
+		return "", err
 	}
 
 	outputParts := strings.Split(string(outputBytes), " ")
 	if len(outputParts) < 3 {
-		return "", errors.New("unexpected output format")
+		return "", errors.New("unexpected go version command output")
 	}
 
 	return outputParts[2], nil

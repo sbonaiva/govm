@@ -31,3 +31,5 @@ bin/govm
 
 coverage.out
 coverage.html
+
+.scannerwork

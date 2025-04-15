@@ -7,7 +7,12 @@ import (
 )
 
 func GetInstalledGoVersion() (string, error) {
-	outputBytes, err := exec.Command("go", "version").CombinedOutput()
+	goPath, err := exec.LookPath("go")
+	if err != nil {
+		return "", err
+	}
+
+	outputBytes, err := exec.Command(goPath, "version").CombinedOutput()
 	if err != nil {
 		return "", err
 	}

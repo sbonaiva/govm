@@ -44,5 +44,5 @@ func TestRootCmd(t *testing.T) {
 	// Assert
 	assert.NoError(t, err)
 	assert.Equal(t, expected, actual)
-	assert.Equal(t, fmt.Sprintf("0.0.2 %s/%s", runtime.GOOS, runtime.GOARCH), cmd.Version)
+	assert.Equal(t, fmt.Sprintf("0.0.3 %s/%s", runtime.GOOS, runtime.GOARCH), cmd.Version)
 }

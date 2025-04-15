@@ -51,6 +51,7 @@ func NewUninstallCmd(ctx context.Context, handler handler.UninstallHandler) *cob
 				return
 			}
 			util.PrintSuccess("Go uninstalled successfully!")
+			util.PrintWarning("Please, reopen your terminal if you want to install a new version.")
 		},
 	}
 }

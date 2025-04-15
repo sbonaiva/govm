@@ -62,7 +62,7 @@ func (r *uninstallCmdSuite) TestSuccess() {
 
 	// Assert
 	r.NoError(err)
-	r.Equal("Confirm uninstall current Go version? (y/n): Go uninstalled successfully!\n", output)
+	r.Equal("Confirm uninstall current Go version? (y/n): Go uninstalled successfully!\nPlease, reopen your terminal if you want to install a new version.\n", output)
 }
 
 func (r *uninstallCmdSuite) TestError() {

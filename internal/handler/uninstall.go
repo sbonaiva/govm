@@ -36,7 +36,7 @@ func (r *uninstallHandler) Handle(ctx context.Context, uninstall *domain.Action)
 		action  func() error
 	}{
 		{" Getting home...", func() error { return r.sharedSvc.CheckUserHome(ctx, uninstall) }},
-		{" Checking version...", func() error { return r.sharedSvc.CheckVersion(ctx, uninstall) }},
+		{" Checking if Go is installed...", func() error { return r.checkIfGoIsInstalled(ctx) }},
 		{" Removing current version...", func() error { return r.sharedSvc.RemoveVersion(ctx, uninstall) }},
 		{" Removing from path...", func() error { return r.sharedSvc.RemoveFromPath(ctx, uninstall) }},
 	}
@@ -48,5 +48,21 @@ func (r *uninstallHandler) Handle(ctx context.Context, uninstall *domain.Action)
 		}
 	}
 
+	return nil
+}
+
+func (r *uninstallHandler) checkIfGoIsInstalled(ctx context.Context) error {
+	slog.InfoContext(ctx, "Checking uninstall", slog.String("UninstallHandler", "checkIfGoInstalled"))
+
+	v, err := r.sharedSvc.GetInstalledGoVersion(ctx)
+	if err != nil {
+		slog.ErrorContext(ctx, "Error getting installed Go version", slog.String("UninstallHandler", "checkIfGoInstalled"), slog.String("error", err.Error()))
+		return err
+	}
+
+	if v == "" {
+		slog.ErrorContext(ctx, "No Go installations found", slog.String("UninstallHandler", "checkIfGoInstalled"))
+		return domain.NewNoGoInstallationsFoundError()
+	}
 	return nil
 }

@@ -40,7 +40,7 @@ func (r *uninstallHandlerSuite) TearDownTest() {
 func (r *uninstallHandlerSuite) TestSuccess() {
 	// Arrange
 	r.sharedSvc.On("CheckUserHome", r.ctx, r.action).Return(nil)
-	r.sharedSvc.On("CheckVersion", r.ctx, r.action).Return(nil)
+	r.sharedSvc.On("GetInstalledGoVersion", r.ctx).Return("1.20", nil)
 	r.sharedSvc.On("RemoveVersion", r.ctx, r.action).Return(nil)
 	r.sharedSvc.On("RemoveFromPath", r.ctx, r.action).Return(nil)
 
@@ -63,10 +63,10 @@ func (r *uninstallHandlerSuite) TestCheckUserHomeError() {
 	r.Equal("error", err.Error())
 }
 
-func (r *uninstallHandlerSuite) TestCheckVersionError() {
+func (r *uninstallHandlerSuite) TestCheckIfGoInstalledError() {
 	// Arrange
 	r.sharedSvc.On("CheckUserHome", r.ctx, r.action).Return(nil)
-	r.sharedSvc.On("CheckVersion", r.ctx, r.action).Return(errors.New("error"))
+	r.sharedSvc.On("GetInstalledGoVersion", r.ctx).Return("", errors.New("error"))
 
 	// Act
 	err := r.handler.Handle(r.ctx, r.action)
@@ -76,10 +76,23 @@ func (r *uninstallHandlerSuite) TestCheckVersionError() {
 	r.Equal("error", err.Error())
 }
 
+func (r *uninstallHandlerSuite) TestCheckIfGoInstalledEmpty() {
+	// Arrange
+	r.sharedSvc.On("CheckUserHome", r.ctx, r.action).Return(nil)
+	r.sharedSvc.On("GetInstalledGoVersion", r.ctx).Return("", nil)
+
+	// Act
+	err := r.handler.Handle(r.ctx, r.action)
+
+	// Assert
+	r.Error(err)
+	r.Equal(domain.NewNoGoInstallationsFoundError(), err)
+}
+
 func (r *uninstallHandlerSuite) TestRemoveVersionError() {
 	// Arrange
 	r.sharedSvc.On("CheckUserHome", r.ctx, r.action).Return(nil)
-	r.sharedSvc.On("CheckVersion", r.ctx, r.action).Return(nil)
+	r.sharedSvc.On("GetInstalledGoVersion", r.ctx).Return("1.20", nil)
 	r.sharedSvc.On("RemoveVersion", r.ctx, r.action).Return(errors.New("error"))
 
 	// Act
@@ -93,7 +106,7 @@ func (r *uninstallHandlerSuite) TestRemoveVersionError() {
 func (r *uninstallHandlerSuite) TestRemoveFromPathError() {
 	// Arrange
 	r.sharedSvc.On("CheckUserHome", r.ctx, r.action).Return(nil)
-	r.sharedSvc.On("CheckVersion", r.ctx, r.action).Return(nil)
+	r.sharedSvc.On("GetInstalledGoVersion", r.ctx).Return("1.20", nil)
 	r.sharedSvc.On("RemoveVersion", r.ctx, r.action).Return(nil)
 	r.sharedSvc.On("RemoveFromPath", r.ctx, r.action).Return(errors.New("error"))
 

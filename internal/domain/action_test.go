@@ -3,6 +3,7 @@ package domain_test
 import (
 	"fmt"
 	"os"
+	"path"
 	"runtime"
 	"testing"
 
@@ -17,8 +18,10 @@ func TestAction(t *testing.T) {
 		UpdateStrategy: domain.MinorStrategy,
 	}
 
-	assert.Equal(t, fmt.Sprintf("go1.19.13.%s-%s.tar.gz", runtime.GOOS, runtime.GOARCH), action.Filename())
-	assert.Equal(t, fmt.Sprintf("%sgo1.19.13.%s-%s.tar.gz", os.TempDir(), runtime.GOOS, runtime.GOARCH), action.DownloadFile())
+	filename := fmt.Sprintf("go1.19.13.%s-%s.tar.gz", runtime.GOOS, runtime.GOARCH)
+
+	assert.Equal(t, filename, action.Filename())
+	assert.Equal(t, path.Join(os.TempDir(), filename), action.DownloadFile())
 
 	assert.Equal(t, "/home/user/.govm/go/bin", action.HomeGoBinDir())
 	assert.Equal(t, "/home/user/.govm/go", action.HomeGoDir())

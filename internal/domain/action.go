@@ -5,13 +5,17 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 )
 
 type UpdateStrategy string
 
 const (
-	pathContent = "%s\nexport PATH=$PATH:%s\nexport GOPATH=$HOME/go\n"
-	pathComment = "# The next line is added by govm"
+	exportBegin  = "# The next lines are added by govm"
+	exportGoRoot = "export GOROOT=%s"
+	exportGoPath = "export GOPATH=$HOME/go"
+	exportPath   = "export PATH=$PATH:%s"
+	exportEnd    = "# End of govm path"
 
 	MajorStrategy UpdateStrategy = "major"
 	MinorStrategy UpdateStrategy = "minor"
@@ -46,7 +50,13 @@ func (r Action) HomeGoBinDir() string {
 }
 
 func (r Action) Export() string {
-	return fmt.Sprintf(pathContent, pathComment, r.HomeGoBinDir())
+	return strings.Join([]string{
+		exportBegin,
+		fmt.Sprintf(exportGoRoot, r.HomeGoDir()),
+		exportGoPath,
+		fmt.Sprintf(exportPath, r.HomeGoBinDir()),
+		exportEnd,
+	}, "\n")
 }
 
 func (r *Action) CheckUpdateStrategy() error {

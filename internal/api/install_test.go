@@ -36,7 +36,7 @@ func (r *installCmdSuite) TearDownTest() {
 
 func (r *installCmdSuite) TestSuccess() {
 	// Arrange
-	r.handler.On("Handle", r.ctx, &domain.Install{Version: "1.15.0"}).Return(nil)
+	r.handler.On("Handle", r.ctx, &domain.Action{Version: "1.15.0"}).Return(nil)
 
 	// Act
 	output, _ := test.CaptureOutput(func() error {
@@ -50,7 +50,7 @@ func (r *installCmdSuite) TestSuccess() {
 
 func (r *installCmdSuite) TestErrorHandling() {
 	// Arrange
-	r.handler.On("Handle", r.ctx, &domain.Install{Version: "1.24.0"}).Return(errors.New("install error"))
+	r.handler.On("Handle", r.ctx, &domain.Action{Version: "1.24.0"}).Return(errors.New("install error"))
 
 	// Act
 	output, _ := test.CaptureOutput(func() error {

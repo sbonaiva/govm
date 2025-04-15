@@ -5,36 +5,35 @@ import (
 )
 
 const (
-	errMessageUnexpected          = "an unexpected error occurred, please verify govm.log for more information"
-	errMessageVersionNotAvailable = "go version \"%s\" is not available"
+	errMessageUnexpected             = "an unexpected error occurred, please verify govm.log for more information"
+	errMessageVersionNotAvailable    = "go version \"%s\" is not available"
+	errMessageNoUpdatesAvailable     = "no %s updates available for version \"%s\""
+	errMessageNoGoInstallationsFound = "no go installations found"
+	errMessageInvalidUpdateStrategy  = "\"%s\" is not a valid update strategy"
 
 	ErrCodeListVersions = 1
 
-	ErrCodeInstallCheckUserHome          = 1
-	ErrCodeInstallCheckVersion           = 2
-	ErrCodeInstallDownloadRemoveDir      = 3
-	ErrCodeInstallDownloadCreateFile     = 4
-	ErrCodeInstallDownloadVersion        = 5
-	ErrCodeInstallChecksumDownload       = 6
-	ErrCodeInstallChecksumOpenFile       = 7
-	ErrCodeInstallChecksumCopy           = 8
-	ErrCodeInstallChecksumMismatch       = 9
-	ErrCodeInstallRemovePreviousVersion  = 10
-	ErrCodeInstallUntarCreateDir         = 11
-	ErrCodeInstallUntarExtract           = 12
-	ErrCodeInstallAddToPathNoShellsFound = 13
-	ErrCodeInstallAddToPathStat          = 14
-	ErrCodeInstallAddToPathRead          = 15
-	ErrCodeInstallAddToPathWrite         = 16
-
-	ErrCodeUninstallCheckUserHome               = 1
-	ErrCodeUninstallCheckVersionStat            = 2
-	ErrCodeUninstallCheckVersionNotDir          = 3
-	ErrCodeUninstallRemoveDir                   = 4
-	ErrCodeUninstallRemoveFromPathNoShellsFound = 5
-	ErrCodeUninstallRemoveFromPathStat          = 6
-	ErrCodeUninstallRemoveFromPathRead          = 7
-	ErrCodeUninstallRemoveFromPathWrite         = 8
+	ErrCodeCheckUserHome               = 1
+	ErrCodeCheckVersion                = 2
+	ErrCodeDownloadRemoveDir           = 3
+	ErrCodeDownloadCreateFile          = 4
+	ErrCodeDownloadVersion             = 5
+	ErrCodeChecksumDownload            = 6
+	ErrCodeChecksumOpenFile            = 7
+	ErrCodeChecksumCopy                = 8
+	ErrCodeChecksumMismatch            = 9
+	ErrCodeRemoveVersion               = 10
+	ErrCodeUntarCreateDir              = 11
+	ErrCodeUntarExtract                = 12
+	ErrCodeAddToPathNoShellsFound      = 13
+	ErrCodeAddToPathStat               = 14
+	ErrCodeAddToPathRead               = 15
+	ErrCodeAddToPathWrite              = 16
+	ErrCodeRemoveCurrentVersion        = 17
+	ErrCodeRemoveFromPathNoShellsFound = 18
+	ErrCodeRemoveFromPathStat          = 19
+	ErrCodeRemoveFromPathRead          = 20
+	ErrCodeRemoveFromPathWrite         = 21
 )
 
 type baseError struct {
@@ -56,6 +55,27 @@ func NewUnexpectedError(code int) error {
 func NewVersionNotAvailableError(version string) error {
 	return &baseError{
 		Message: fmt.Sprintf(errMessageVersionNotAvailable, version),
+		Code:    1,
+	}
+}
+
+func NewNoUpdatesAvailableError(strategy UpdateStrategy, version string) error {
+	return &baseError{
+		Message: fmt.Sprintf(errMessageNoUpdatesAvailable, string(strategy), version),
+		Code:    1,
+	}
+}
+
+func NewNoGoInstallationsFoundError() error {
+	return &baseError{
+		Message: errMessageNoGoInstallationsFound,
+		Code:    1,
+	}
+}
+
+func NewInvalidUpdateStrategyError(strategy UpdateStrategy) error {
+	return &baseError{
+		Message: fmt.Sprintf(errMessageInvalidUpdateStrategy, string(strategy)),
 		Code:    1,
 	}
 }

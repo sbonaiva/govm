@@ -37,7 +37,7 @@ func (r *uninstallCmdSuite) TearDownTest() {
 
 func (r *uninstallCmdSuite) TestSuccess() {
 	// Arrange
-	r.handler.On("Handle", r.ctx, &domain.Uninstall{}).Return(nil)
+	r.handler.On("Handle", r.ctx, &domain.Action{}).Return(nil)
 
 	input := []byte("y")
 	rdr, wtr, err := os.Pipe()
@@ -62,12 +62,12 @@ func (r *uninstallCmdSuite) TestSuccess() {
 
 	// Assert
 	r.NoError(err)
-	r.Equal("Confirm uninstall current Go version? (y/n): Go uninstalled successfully!\n", output)
+	r.Equal("Confirm uninstall current Go version? (y/n): Go uninstalled successfully!\nPlease, reopen your terminal if you want to install a new version.\n", output)
 }
 
 func (r *uninstallCmdSuite) TestError() {
 	// Arrange
-	r.handler.On("Handle", r.ctx, &domain.Uninstall{}).Return(errors.New("uninstall error"))
+	r.handler.On("Handle", r.ctx, &domain.Action{}).Return(errors.New("uninstall error"))
 
 	input := []byte("y")
 	rdr, wtr, err := os.Pipe()

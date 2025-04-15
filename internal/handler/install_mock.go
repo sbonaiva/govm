@@ -11,7 +11,7 @@ type InstallHandlerMock struct {
 	mock.Mock
 }
 
-func (m *InstallHandlerMock) Handle(ctx context.Context, install *domain.Install) error {
+func (m *InstallHandlerMock) Handle(ctx context.Context, install *domain.Action) error {
 	args := m.Called(ctx, install)
 	return args.Error(0)
 }

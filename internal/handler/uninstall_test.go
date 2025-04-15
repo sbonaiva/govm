@@ -6,16 +6,16 @@ import (
 	"testing"
 
 	"github.com/sbonaiva/govm/internal/domain"
-	"github.com/sbonaiva/govm/internal/gateway"
 	"github.com/sbonaiva/govm/internal/handler"
-	"github.com/stretchr/testify/mock"
+	"github.com/sbonaiva/govm/internal/service"
 	"github.com/stretchr/testify/suite"
 )
 
 type uninstallHandlerSuite struct {
 	suite.Suite
 	ctx       context.Context
-	osGateway *gateway.OsGatewayMock
+	action    *domain.Action
+	sharedSvc *service.SharedServiceMock
 	handler   handler.UninstallHandler
 }
 
@@ -25,190 +25,95 @@ func TestUninstallHandler(t *testing.T) {
 
 func (r *uninstallHandlerSuite) SetupTest() {
 	r.ctx = context.Background()
-	r.osGateway = new(gateway.OsGatewayMock)
-	r.handler = handler.NewUninstall(r.osGateway)
+	r.action = &domain.Action{
+		Version: "1.20.5",
+		HomeDir: "/home/fake",
+	}
+	r.sharedSvc = new(service.SharedServiceMock)
+	r.handler = handler.NewUninstall(r.sharedSvc)
 }
 
 func (r *uninstallHandlerSuite) TearDownTest() {
-	r.osGateway.AssertExpectations(r.T())
+	r.sharedSvc.AssertExpectations(r.T())
+}
+
+func (r *uninstallHandlerSuite) TestSuccess() {
+	// Arrange
+	r.sharedSvc.On("CheckUserHome", r.ctx, r.action).Return(nil)
+	r.sharedSvc.On("GetInstalledGoVersion", r.ctx).Return("1.20", nil)
+	r.sharedSvc.On("RemoveVersion", r.ctx, r.action).Return(nil)
+	r.sharedSvc.On("RemoveFromPath", r.ctx, r.action).Return(nil)
+
+	// Act
+	err := r.handler.Handle(r.ctx, r.action)
+
+	// Assert
+	r.NoError(err)
 }
 
 func (r *uninstallHandlerSuite) TestCheckUserHomeError() {
-	uninstall := &domain.Uninstall{}
+	// Arrange
+	r.sharedSvc.On("CheckUserHome", r.ctx, r.action).Return(errors.New("error"))
 
-	r.osGateway.On("GetUserHomeDir").Return("", errors.New("error")).Once()
+	// Act
+	err := r.handler.Handle(r.ctx, r.action)
 
-	err := r.handler.Handle(r.ctx, uninstall)
-
+	// Assert
 	r.Error(err)
-	r.Equal(domain.NewUnexpectedError(domain.ErrCodeUninstallCheckUserHome), err)
+	r.Equal("error", err.Error())
 }
 
-func (r *uninstallHandlerSuite) TestCheckVersionStatError() {
-	uninstall := &domain.Uninstall{}
-	fakeFileInfo := new(gateway.FileInfoMock)
-	r.osGateway.On("GetUserHomeDir").Return("/fake/home", nil).Once()
-	r.osGateway.On("Stat", mock.AnythingOfType("string")).Return(fakeFileInfo, errors.New("error")).Once()
+func (r *uninstallHandlerSuite) TestCheckIfGoInstalledError() {
+	// Arrange
+	r.sharedSvc.On("CheckUserHome", r.ctx, r.action).Return(nil)
+	r.sharedSvc.On("GetInstalledGoVersion", r.ctx).Return("", errors.New("error"))
 
-	err := r.handler.Handle(r.ctx, uninstall)
+	// Act
+	err := r.handler.Handle(r.ctx, r.action)
 
+	// Assert
 	r.Error(err)
-	r.Equal(domain.NewUnexpectedError(domain.ErrCodeUninstallCheckVersionStat), err)
+	r.Equal("error", err.Error())
 }
 
-func (r *uninstallHandlerSuite) TestCheckVersionNotDirError() {
-	uninstall := &domain.Uninstall{}
-	fakeFileInfo := new(gateway.FileInfoMock)
-	fakeFileInfo.On("IsDir").Return(false)
+func (r *uninstallHandlerSuite) TestCheckIfGoInstalledEmpty() {
+	// Arrange
+	r.sharedSvc.On("CheckUserHome", r.ctx, r.action).Return(nil)
+	r.sharedSvc.On("GetInstalledGoVersion", r.ctx).Return("", nil)
 
-	r.osGateway.On("GetUserHomeDir").Return("/fake/home", nil).Once()
-	r.osGateway.On("Stat", mock.AnythingOfType("string")).Return(fakeFileInfo, nil).Once()
+	// Act
+	err := r.handler.Handle(r.ctx, r.action)
 
-	err := r.handler.Handle(r.ctx, uninstall)
-
+	// Assert
 	r.Error(err)
-	r.Equal(domain.NewUnexpectedError(domain.ErrCodeUninstallCheckVersionNotDir), err)
+	r.Equal(domain.NewNoGoInstallationsFoundError(), err)
 }
 
-func (r *uninstallHandlerSuite) TestRemoveCurrentVersionError() {
-	uninstall := &domain.Uninstall{}
-	fakeFileInfo := new(gateway.FileInfoMock)
-	fakeFileInfo.On("IsDir").Return(true)
+func (r *uninstallHandlerSuite) TestRemoveVersionError() {
+	// Arrange
+	r.sharedSvc.On("CheckUserHome", r.ctx, r.action).Return(nil)
+	r.sharedSvc.On("GetInstalledGoVersion", r.ctx).Return("1.20", nil)
+	r.sharedSvc.On("RemoveVersion", r.ctx, r.action).Return(errors.New("error"))
 
-	r.osGateway.On("GetUserHomeDir").Return("/fake/home", nil).Once()
-	r.osGateway.On("Stat", mock.AnythingOfType("string")).Return(fakeFileInfo, nil).Once()
-	r.osGateway.On("RemoveDir", mock.AnythingOfType("string")).Return(errors.New("error")).Once()
+	// Act
+	err := r.handler.Handle(r.ctx, r.action)
 
-	err := r.handler.Handle(r.ctx, uninstall)
-
+	// Assert
 	r.Error(err)
-	r.Equal(domain.NewUnexpectedError(domain.ErrCodeUninstallRemoveDir), err)
+	r.Equal("error", err.Error())
 }
 
-func (r *uninstallHandlerSuite) TestRemoveFromPathNoShellCommandsFound() {
-	uninstall := &domain.Uninstall{}
-	fakeFileInfo := new(gateway.FileInfoMock)
-	fakeFileInfo.On("IsDir").Return(true)
+func (r *uninstallHandlerSuite) TestRemoveFromPathError() {
+	// Arrange
+	r.sharedSvc.On("CheckUserHome", r.ctx, r.action).Return(nil)
+	r.sharedSvc.On("GetInstalledGoVersion", r.ctx).Return("1.20", nil)
+	r.sharedSvc.On("RemoveVersion", r.ctx, r.action).Return(nil)
+	r.sharedSvc.On("RemoveFromPath", r.ctx, r.action).Return(errors.New("error"))
 
-	r.osGateway.On("GetUserHomeDir").Return("/fake/home", nil).Once()
-	r.osGateway.On("Stat", mock.AnythingOfType("string")).Return(fakeFileInfo, nil).Once()
-	r.osGateway.On("RemoveDir", mock.AnythingOfType("string")).Return(nil).Once()
-	r.osGateway.On("GetEnv", "PATH").Return("/fake/home/.govm/go/bin", nil).Once()
-	r.osGateway.On("GetEnv", "SHELL").Return("", nil).Once()
-	r.osGateway.On("Stat", mock.Anything).Return(fakeFileInfo, errors.New("error")).Times(8)
+	// Act
+	err := r.handler.Handle(r.ctx, r.action)
 
-	err := r.handler.Handle(r.ctx, uninstall)
-
+	// Assert
 	r.Error(err)
-	r.Equal(domain.NewUnexpectedError(domain.ErrCodeUninstallRemoveFromPathNoShellsFound), err)
-}
-
-func (r *uninstallHandlerSuite) TestRemoveFromPathStatError() {
-	uninstall := &domain.Uninstall{}
-	fakeFileInfo := new(gateway.FileInfoMock)
-	fakeFileInfo.On("IsDir").Return(true)
-
-	r.osGateway.On("GetUserHomeDir").Return("/fake/home", nil).Once()
-	r.osGateway.On("Stat", mock.AnythingOfType("string")).Return(fakeFileInfo, nil).Once()
-	r.osGateway.On("RemoveDir", mock.AnythingOfType("string")).Return(nil).Once()
-	r.osGateway.On("GetEnv", "PATH").Return("/fake/home/.govm/go/bin", nil).Once()
-	r.osGateway.On("GetEnv", "SHELL").Return("/bin/bash", nil).Once()
-	r.osGateway.On("Stat", mock.Anything).Return(fakeFileInfo, errors.New("error")).Once()
-
-	err := r.handler.Handle(r.ctx, uninstall)
-
-	r.Error(err)
-	r.Equal(domain.NewUnexpectedError(domain.ErrCodeUninstallRemoveFromPathStat), err)
-}
-
-func (r *uninstallHandlerSuite) TestRemoveFromShellRunCommandsReadError() {
-	uninstall := &domain.Uninstall{}
-	fakeFileInfo := new(gateway.FileInfoMock)
-	fakeFileInfo.On("IsDir").Return(true)
-
-	r.osGateway.On("GetUserHomeDir").Return("/fake/home", nil).Once()
-	r.osGateway.On("Stat", mock.AnythingOfType("string")).Return(fakeFileInfo, nil).Once()
-	r.osGateway.On("RemoveDir", mock.AnythingOfType("string")).Return(nil).Once()
-	r.osGateway.On("GetEnv", "PATH").Return("/fake/home/.govm/go/bin", nil).Once()
-	r.osGateway.On("GetEnv", "SHELL").Return("/bin/bash", nil).Once()
-	r.osGateway.On("Stat", mock.Anything).Return(fakeFileInfo, nil).Once()
-	r.osGateway.On("ReadFile", mock.Anything).Return([]byte{}, errors.New("error")).Once()
-
-	err := r.handler.Handle(r.ctx, uninstall)
-
-	r.Error(err)
-	r.Equal(domain.NewUnexpectedError(domain.ErrCodeUninstallRemoveFromPathRead), err)
-}
-
-func (r *uninstallHandlerSuite) TestRemoveFromShellRunCommandsWriteError() {
-	uninstall := &domain.Uninstall{}
-	fakeFileInfo := new(gateway.FileInfoMock)
-	fakeFileInfo.On("IsDir").Return(true)
-
-	r.osGateway.On("GetUserHomeDir").Return("/fake/home", nil).Once()
-	r.osGateway.On("Stat", mock.AnythingOfType("string")).Return(fakeFileInfo, nil).Once()
-	r.osGateway.On("RemoveDir", mock.AnythingOfType("string")).Return(nil).Once()
-	r.osGateway.On("GetEnv", "PATH").Return("/fake/home/.govm/go/bin", nil).Once()
-	r.osGateway.On("GetEnv", "SHELL").Return("/bin/bash", nil).Once()
-	r.osGateway.On("Stat", mock.Anything).Return(fakeFileInfo, nil).Once()
-	r.osGateway.On("ReadFile", mock.Anything).Return([]byte("content"), nil).Once()
-	r.osGateway.On("WriteFile", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("error")).Once()
-
-	err := r.handler.Handle(r.ctx, uninstall)
-
-	r.Error(err)
-	r.Equal(domain.NewUnexpectedError(domain.ErrCodeUninstallRemoveFromPathWrite), err)
-}
-
-func (r *uninstallHandlerSuite) TestSuccessAlreadyRemovedFromPath() {
-	uninstall := &domain.Uninstall{}
-	fakeFileInfo := new(gateway.FileInfoMock)
-	fakeFileInfo.On("IsDir").Return(true)
-
-	r.osGateway.On("GetUserHomeDir").Return("/fake/home", nil).Once()
-	r.osGateway.On("Stat", mock.AnythingOfType("string")).Return(fakeFileInfo, nil).Once()
-	r.osGateway.On("RemoveDir", mock.AnythingOfType("string")).Return(nil).Once()
-	r.osGateway.On("GetEnv", "PATH").Return("/usr/bin", nil).Once()
-
-	err := r.handler.Handle(r.ctx, uninstall)
-
-	r.NoError(err)
-}
-
-func (r *uninstallHandlerSuite) TestSuccessRemovingFromPathWithEmptyShellEnvVar() {
-	uninstall := &domain.Uninstall{}
-	fakeFileInfo := new(gateway.FileInfoMock)
-	fakeFileInfo.On("IsDir").Return(true)
-
-	r.osGateway.On("GetUserHomeDir").Return("/fake/home", nil).Once()
-	r.osGateway.On("Stat", mock.AnythingOfType("string")).Return(fakeFileInfo, nil).Once()
-	r.osGateway.On("RemoveDir", mock.AnythingOfType("string")).Return(nil).Once()
-	r.osGateway.On("GetEnv", "PATH").Return("/fake/home/.govm/go/bin", nil).Once()
-	r.osGateway.On("GetEnv", "SHELL").Return("", nil).Once()
-	r.osGateway.On("Stat", mock.Anything).Return(fakeFileInfo, nil).Times(8)
-	r.osGateway.On("ReadFile", mock.Anything).Return([]byte("path content"), nil).Times(8)
-	r.osGateway.On("WriteFile", mock.Anything, mock.Anything, mock.Anything).Return(nil).Times(8)
-
-	err := r.handler.Handle(r.ctx, uninstall)
-
-	r.NoError(err)
-}
-
-func (r *uninstallHandlerSuite) TestSuccessRemovingFromPathWithFilledShellEnvVar() {
-	uninstall := &domain.Uninstall{}
-	fakeFileInfo := new(gateway.FileInfoMock)
-	fakeFileInfo.On("IsDir").Return(true)
-
-	r.osGateway.On("GetUserHomeDir").Return("/fake/home", nil).Once()
-	r.osGateway.On("Stat", mock.AnythingOfType("string")).Return(fakeFileInfo, nil).Once()
-	r.osGateway.On("RemoveDir", mock.AnythingOfType("string")).Return(nil).Once()
-	r.osGateway.On("GetEnv", "PATH").Return("/fake/home/.govm/go/bin", nil).Once()
-	r.osGateway.On("GetEnv", "SHELL").Return("/bin/bash", nil).Once()
-	r.osGateway.On("Stat", mock.Anything).Return(fakeFileInfo, nil).Once()
-	r.osGateway.On("ReadFile", mock.Anything).Return([]byte("path content"), nil).Once()
-	r.osGateway.On("WriteFile", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
-
-	err := r.handler.Handle(r.ctx, uninstall)
-
-	r.NoError(err)
+	r.Equal("error", err.Error())
 }

@@ -1,9 +1,11 @@
 package gateway
 
 import (
+	"errors"
 	"os"
 	"os/exec"
 	"os/user"
+	"strings"
 )
 
 type OsGateway interface {
@@ -18,6 +20,7 @@ type OsGateway interface {
 	RemoveFile(path string) error
 	GetEnv(key string) string
 	Untar(source string, target string) error
+	GetInstalledGoVersion() (string, error)
 }
 
 type osClient struct{}
@@ -78,4 +81,23 @@ func (o *osClient) GetEnv(key string) string {
 
 func (o *osClient) Untar(source string, target string) error {
 	return exec.Command("tar", "-C", target, "-xzf", source).Run()
+}
+
+func (o *osClient) GetInstalledGoVersion() (string, error) {
+	goPath, err := exec.LookPath("go")
+	if err != nil {
+		return "", err
+	}
+
+	outputBytes, err := exec.Command(goPath, "version").CombinedOutput()
+	if err != nil {
+		return "", err
+	}
+
+	outputParts := strings.Split(string(outputBytes), " ")
+	if len(outputParts) < 3 {
+		return "", errors.New("unexpected go version command output")
+	}
+
+	return outputParts[2], nil
 }

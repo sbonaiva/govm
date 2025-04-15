@@ -9,17 +9,17 @@ import (
 	"testing"
 
 	"github.com/sbonaiva/govm/internal/domain"
-	"github.com/sbonaiva/govm/internal/gateway"
 	"github.com/sbonaiva/govm/internal/handler"
+	"github.com/sbonaiva/govm/internal/service"
 	"github.com/sbonaiva/govm/internal/test"
 	"github.com/stretchr/testify/suite"
 )
 
 type listHandlerSuite struct {
 	suite.Suite
-	ctx     context.Context
-	gateway *gateway.HttpGatewayMock
-	handler handler.ListHandler
+	ctx       context.Context
+	sharedSvc *service.SharedServiceMock
+	handler   handler.ListHandler
 }
 
 func TestListHandler(t *testing.T) {
@@ -28,23 +28,27 @@ func TestListHandler(t *testing.T) {
 
 func (r *listHandlerSuite) SetupTest() {
 	r.ctx = context.Background()
-	r.gateway = new(gateway.HttpGatewayMock)
-	r.handler = handler.NewList(r.gateway)
+	r.sharedSvc = new(service.SharedServiceMock)
+	r.handler = handler.NewList(r.sharedSvc)
 }
 
 func (r *listHandlerSuite) TearDownTest() {
-	r.gateway.AssertExpectations(r.T())
+	r.sharedSvc.AssertExpectations(r.T())
 }
 
 func (r *listHandlerSuite) TestSuccess() {
-	r.gateway.On("GetVersions", r.ctx).Return([]domain.GoVersionResponse{
-		{Version: "1.16"},
-		{Version: "1.17"},
-		{Version: "1.18"},
-		{Version: "1.19"},
-		{Version: "1.20"},
-		{Version: "1.21"},
+	r.sharedSvc.On("GetAvailableGoVersions", r.ctx).Return(domain.VersionsResponse{
+		Versions: []domain.VersionResponse{
+			{Version: "1.16"},
+			{Version: "1.17"},
+			{Version: "1.18"},
+			{Version: "1.19"},
+			{Version: "1.20"},
+			{Version: "1.21"},
+		},
 	}, nil)
+
+	r.sharedSvc.On("GetInstalledGoVersion", r.ctx).Return("", nil)
 
 	output, err := test.CaptureOutput(func() error {
 		err := r.handler.Handle(r.ctx)
@@ -69,7 +73,7 @@ func (r *listHandlerSuite) TestSuccess() {
 }
 
 func (r *listHandlerSuite) TestError() {
-	r.gateway.On("GetVersions", r.ctx).Return([]domain.GoVersionResponse{}, errors.New("gateway error"))
+	r.sharedSvc.On("GetAvailableGoVersions", r.ctx).Return(domain.VersionsResponse{}, errors.New("error"))
 
 	output, err := test.CaptureOutput(func() error {
 		err := r.handler.Handle(r.ctx)
@@ -77,6 +81,6 @@ func (r *listHandlerSuite) TestError() {
 	})
 
 	r.Error(err)
-	r.Equal(domain.NewUnexpectedError(domain.ErrCodeListVersions), err)
+	r.Equal("error", err.Error())
 	r.Empty(output)
 }

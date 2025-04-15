@@ -2,14 +2,10 @@ package domain
 
 import (
 	"fmt"
-	"os/exec"
 	"runtime"
-	"strings"
 )
 
-var currentVersion string
-
-type GoFileResponse struct {
+type FileResponse struct {
 	Filename string `json:"filename"`
 	OS       string `json:"os"`
 	Arch     string `json:"arch"`
@@ -17,30 +13,13 @@ type GoFileResponse struct {
 	SHA256   string `json:"sha256"`
 }
 
-type GoVersionResponse struct {
+type VersionResponse struct {
 	Version string `json:"version"`
 	Stable  bool   `json:"stable"`
-	Files   []GoFileResponse
+	Files   []FileResponse
 }
 
-func init() {
-	outputBytes, err := exec.Command("go", "version").Output()
-	if err != nil {
-		currentVersion = ""
-		return
-	}
-
-	outputParts := strings.Split(string(outputBytes), " ")
-
-	if len(outputParts) < 3 {
-		currentVersion = ""
-		return
-	}
-
-	currentVersion = outputParts[2]
-}
-
-func (v GoVersionResponse) IsCompatible() bool {
+func (v VersionResponse) IsCompatible() bool {
 	for _, f := range v.Files {
 		if f.Kind == "archive" && f.OS == runtime.GOOS && f.Arch == runtime.GOARCH {
 			return true
@@ -49,11 +28,23 @@ func (v GoVersionResponse) IsCompatible() bool {
 	return false
 }
 
-func (v GoVersionResponse) String() string {
+func (v VersionResponse) String(currentVersion string) string {
 
 	if v.Version == currentVersion {
 		return fmt.Sprintf("* %s", v.Version)
 	}
 
 	return v.Version
+}
+
+type VersionsResponse struct {
+	Versions []VersionResponse
+}
+
+func (v VersionsResponse) StringSlice() []string {
+	versions := make([]string, len(v.Versions))
+	for i, version := range v.Versions {
+		versions[i] = version.Version
+	}
+	return versions
 }

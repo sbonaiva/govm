@@ -67,6 +67,11 @@ func (m *OsGatewayMock) Untar(source string, target string) error {
 	return args.Error(0)
 }
 
+func (m *OsGatewayMock) GetInstalledGoVersion() (string, error) {
+	args := m.Called()
+	return args.String(0), args.Error(1)
+}
+
 type FileInfoMock struct {
 	mock.Mock
 }

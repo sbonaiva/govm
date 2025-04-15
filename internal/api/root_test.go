@@ -33,7 +33,8 @@ func TestRootCmd(t *testing.T) {
 		"  help        Help about any command\n",
 		"  install     Install a Go version\n",
 		"  list        List all Go versions\n",
-		"  uninstall   Uninstall a Go version\n\n",
+		"  uninstall   Uninstall a Go version\n",
+		"  update      Update Go version\n\n",
 		"Flags:\n",
 		"  -h, --help      help for govm\n",
 		"  -v, --version   version for govm\n\n",
@@ -43,5 +44,5 @@ func TestRootCmd(t *testing.T) {
 	// Assert
 	assert.NoError(t, err)
 	assert.Equal(t, expected, actual)
-	assert.Equal(t, fmt.Sprintf("0.0.2 %s/%s", runtime.GOOS, runtime.GOARCH), cmd.Version)
+	assert.Equal(t, fmt.Sprintf("0.0.3 %s/%s", runtime.GOOS, runtime.GOARCH), cmd.Version)
 }

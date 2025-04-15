@@ -58,6 +58,22 @@ govm uninstall
 
 This command removes the currently installed version of Go from your system.
 
+### Update
+
+```bash
+govm update [-s strategy]
+```
+
+The update command checks for a new available version of Go based on the specified update strategy. 
+The update strategies include:
+
+- patch: Updates to the latest version within the same minor version (e.g., from go1.23.4 to go1.23.6).
+- minor: Updates to the latest version within the same major version (e.g., from go1.22.3 to go1.24.2).
+- major: Updates to the latest major version (e.g., from go1.22.3 to go2.0).
+
+#### Options
+- -s or -strategy: Specifies the desired update strategy. If no strategy is provided, the default strategy used will be patch.
+
 ## Troubleshooting
 If you encounter any issues while using the application, please follow these steps:
 

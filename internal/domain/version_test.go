@@ -17,7 +17,7 @@ func TestVersionsResponse(t *testing.T) {
 				Stable:  true,
 				Files: []domain.FileResponse{
 					{
-						Filename: "go1.20.5.linux-amd64.tar.gz",
+						Filename: "go1.20.5.tar.gz",
 						OS:       runtime.GOOS,
 						Arch:     runtime.GOARCH,
 						Kind:     "archive",
@@ -29,8 +29,8 @@ func TestVersionsResponse(t *testing.T) {
 				Stable:  true,
 				Files: []domain.FileResponse{
 					{
-						Filename: "go1.20.7.darwin-amd64.tar.gz",
-						OS:       "darwin",
+						Filename: "go1.20.6.tar.gz",
+						OS:       "solaris",
 						Arch:     runtime.GOARCH,
 						Kind:     "archive",
 					},

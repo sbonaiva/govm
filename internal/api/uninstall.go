@@ -21,7 +21,6 @@ func NewUninstallCmd(ctx context.Context, handler handler.UninstallHandler) *cob
 		Long:    "Uninstall a Go version",
 		Example: "govm uninstall",
 		Run: func(cmd *cobra.Command, args []string) {
-			// Uninstall a Go version
 			proceed := false
 			reader := bufio.NewReader(os.Stdin)
 			for {

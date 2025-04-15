@@ -29,7 +29,7 @@ func NewRootCmd(ctx context.Context, httpGateway gateway.HttpGateway, osGateway 
 			sharedSvc := service.NewShared(httpGateway, osGateway)
 
 			instance.AddCommand(
-				NewListCmd(ctx, handler.NewList(httpGateway)),
+				NewListCmd(ctx, handler.NewList(sharedSvc)),
 				NewInstallCmd(ctx, handler.NewInstall(sharedSvc)),
 				NewUninstallCmd(ctx, handler.NewUninstall(sharedSvc)),
 				NewUpdateCmd(ctx, handler.NewUpdate(sharedSvc)),

@@ -9,6 +9,7 @@ const (
 	errMessageVersionNotAvailable    = "go version \"%s\" is not available"
 	errMessageNoUpdatesAvailable     = "no %s updates available for version \"%s\""
 	errMessageNoGoInstallationsFound = "no go installations found"
+	errMessageInvalidUpdateStrategy  = "\"%s\" is not a valid update strategy"
 
 	ErrCodeListVersions = 1
 
@@ -68,6 +69,13 @@ func NewNoUpdatesAvailableError(strategy UpdateStrategy, version string) error {
 func NewNoGoInstallationsFoundError() error {
 	return &baseError{
 		Message: errMessageNoGoInstallationsFound,
+		Code:    1,
+	}
+}
+
+func NewInvalidUpdateStrategyError(strategy UpdateStrategy) error {
+	return &baseError{
+		Message: fmt.Sprintf(errMessageInvalidUpdateStrategy, string(strategy)),
 		Code:    1,
 	}
 }

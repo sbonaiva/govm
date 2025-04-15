@@ -209,6 +209,16 @@ func (r *sharedServiceSuite) TestRemoveVersionError() {
 	r.Equal(domain.NewUnexpectedError(domain.ErrCodeRemoveVersion), err)
 }
 
+func (r *sharedServiceSuite) TestUntarFilesSuccess() {
+	r.osGateway.On("CreateDir", r.action.HomeGovmDir(), fileModeType).Return(nil).Once()
+	r.osGateway.On("Untar", r.action.DownloadFile(), r.action.HomeGovmDir()).Return(nil).Once()
+	r.osGateway.On("RemoveFile", r.action.DownloadFile()).Return(nil).Once()
+
+	err := r.sharedSvc.UntarFiles(r.ctx, r.action)
+
+	r.NoError(err)
+}
+
 func (r *sharedServiceSuite) TestUntarFilesCreateDirError() {
 	r.osGateway.On("CreateDir", mock.AnythingOfType("string"), fileModeType).Return(errors.New("error")).Once()
 
@@ -394,6 +404,24 @@ func (r *sharedServiceSuite) TestSuccessRemovingFromPathWithFilledShellEnvVar() 
 	r.NoError(err)
 }
 
+func (r *sharedServiceSuite) TestCheckInstalledVersionSuccess() {
+	r.osGateway.On("GetInstalledGoVersion").Return("1.19.2", nil).Once()
+
+	err := r.sharedSvc.CheckInstalledVersion(r.ctx, r.action)
+
+	r.NoError(err)
+	r.Equal("1.19.2", r.action.InstalledVersion)
+}
+
+func (r *sharedServiceSuite) TestCheckInstalledVersionError() {
+	r.osGateway.On("GetInstalledGoVersion").Return("", errors.New("error")).Once()
+
+	err := r.sharedSvc.CheckInstalledVersion(r.ctx, r.action)
+
+	r.Error(err)
+	r.Equal(domain.NewNoGoInstallationsFoundError(), err)
+}
+
 func (r *sharedServiceSuite) TestCheckAvailableUpdatesSuccess() {
 
 	tests := []struct {
@@ -502,4 +530,42 @@ func (r *sharedServiceSuite) TestCheckAvailableUpdatesGetVersionsError() {
 	r.Error(err)
 	r.Equal(domain.NewUnexpectedError(domain.ErrCodeListVersions), err)
 	r.Empty(action.Version)
+}
+
+func (r *sharedServiceSuite) TestGetAvailableGoVersionsSuccess() {
+	r.httpGateway.On("GetVersions", r.ctx).Return(domain.VersionsResponse{}, nil).Once()
+
+	available, err := r.sharedSvc.GetAvailableGoVersions(r.ctx)
+
+	r.NoError(err)
+	r.Empty(available.Versions)
+}
+
+func (r *sharedServiceSuite) TestGetAvailableGoVersionsError() {
+	r.httpGateway.On("GetVersions", r.ctx).Return(domain.VersionsResponse{}, errors.New("error")).Once()
+
+	available, err := r.sharedSvc.GetAvailableGoVersions(r.ctx)
+
+	r.Error(err)
+	r.Equal(domain.NewUnexpectedError(domain.ErrCodeListVersions), err)
+	r.Empty(available.Versions)
+}
+
+func (r *sharedServiceSuite) TestGetInstalledGoVersionSuccess() {
+	r.osGateway.On("GetInstalledGoVersion").Return("1.2.2", nil).Once()
+
+	installed, err := r.sharedSvc.GetInstalledGoVersion(r.ctx)
+
+	r.NoError(err)
+	r.Equal("1.2.2", installed)
+}
+
+func (r *sharedServiceSuite) TestGetInstalledGoVersionError() {
+	r.osGateway.On("GetInstalledGoVersion").Return("", errors.New("error")).Once()
+
+	installed, err := r.sharedSvc.GetInstalledGoVersion(r.ctx)
+
+	r.Error(err)
+	r.Equal(domain.NewNoGoInstallationsFoundError(), err)
+	r.Empty(installed)
 }

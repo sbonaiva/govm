@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -55,6 +54,6 @@ func (r *Action) CheckUpdateStrategy() error {
 	case MajorStrategy, MinorStrategy, PatchStrategy:
 		return nil
 	default:
-		return errors.New("invalid update strategy")
+		return NewInvalidUpdateStrategyError(r.UpdateStrategy)
 	}
 }

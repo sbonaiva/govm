@@ -13,7 +13,6 @@ import (
 
 	"github.com/sbonaiva/govm/internal/domain"
 	"github.com/sbonaiva/govm/internal/gateway"
-	"github.com/sbonaiva/govm/internal/util"
 )
 
 var (
@@ -40,6 +39,8 @@ type SharedService interface {
 	RemoveFromPath(ctx context.Context, action *domain.Action) error
 	CheckInstalledVersion(ctx context.Context, action *domain.Action) error
 	CheckAvailableUpdates(ctx context.Context, action *domain.Action) error
+	GetInstalledGoVersion(ctx context.Context) (string, error)
+	GetAvailableGoVersions(ctx context.Context) (domain.VersionsResponse, error)
 }
 
 type sharedService struct {
@@ -262,7 +263,7 @@ func (r *sharedService) removeFromShellRunCommands(ctx context.Context, action *
 }
 
 func (r *sharedService) CheckInstalledVersion(ctx context.Context, action *domain.Action) error {
-	installedVersion, err := util.GetInstalledGoVersion()
+	installedVersion, err := r.osGateway.GetInstalledGoVersion()
 	if err != nil {
 		slog.ErrorContext(ctx, "Get installed version", slog.String("SharedService", "CheckInstalledVersion"), slog.String("error", err.Error()))
 		return domain.NewNoGoInstallationsFoundError()
@@ -359,4 +360,22 @@ func (r *sharedService) parseVersion(s string) version {
 		v.Patch, _ = strconv.Atoi(parts[2])
 	}
 	return v
+}
+
+func (r *sharedService) GetAvailableGoVersions(ctx context.Context) (domain.VersionsResponse, error) {
+	res, err := r.httpGateway.GetVersions(ctx)
+	if err != nil {
+		slog.ErrorContext(ctx, "Error while getting versions", slog.String("SharedService", "GetAvailableGoVersions"), slog.String("error", err.Error()))
+		return domain.VersionsResponse{}, domain.NewUnexpectedError(domain.ErrCodeListVersions)
+	}
+	return res, nil
+}
+
+func (r *sharedService) GetInstalledGoVersion(ctx context.Context) (string, error) {
+	res, err := r.osGateway.GetInstalledGoVersion()
+	if err != nil {
+		slog.ErrorContext(ctx, "Error while getting installed version", slog.String("SharedService", "GetInstalledGoVersion"), slog.String("error", err.Error()))
+		return "", domain.NewNoGoInstallationsFoundError()
+	}
+	return res, nil
 }

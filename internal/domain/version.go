@@ -3,15 +3,7 @@ package domain
 import (
 	"fmt"
 	"runtime"
-
-	"github.com/sbonaiva/govm/internal/util"
 )
-
-var currentVersion string
-
-func init() {
-	currentVersion, _ = util.GetInstalledGoVersion()
-}
 
 type FileResponse struct {
 	Filename string `json:"filename"`
@@ -36,7 +28,7 @@ func (v VersionResponse) IsCompatible() bool {
 	return false
 }
 
-func (v VersionResponse) String() string {
+func (v VersionResponse) String(currentVersion string) string {
 
 	if v.Version == currentVersion {
 		return fmt.Sprintf("* %s", v.Version)

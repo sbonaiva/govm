@@ -40,7 +40,7 @@ jobs:
         file: ./coverage.out
 
     - name: SonarQube
-      uses: SonarSource/sonarqube-scan-action@v4
+      uses: SonarSource/sonarqube-scan-action@v5.3.1
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 

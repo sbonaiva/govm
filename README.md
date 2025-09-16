@@ -1,6 +1,6 @@
 # Go Version Manager (govm)
 
-![Go Version Manager](https://img.shields.io/badge/version-0.0.3-blue.svg)
+![Go Version Manager](https://img.shields.io/badge/version-0.0.4-blue.svg)
 ![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)
 [![actions](https://github.com/sbonaiva/govm/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/sbonaiva/govm/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/github/sbonaiva/govm/graph/badge.svg?token=PAY9KKW5S6)](https://codecov.io/github/sbonaiva/govm)

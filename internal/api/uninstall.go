@@ -21,27 +21,23 @@ func NewUninstallCmd(ctx context.Context, handler handler.UninstallHandler) *cob
 		Long:    "Uninstall a Go version",
 		Example: "govm uninstall",
 		Run: func(cmd *cobra.Command, args []string) {
-			proceed := false
 			reader := bufio.NewReader(os.Stdin)
 			for {
-				if !proceed {
-					fmt.Print("Confirm uninstall current Go version? (y/n): ")
-					confirmation, _ := reader.ReadString('\n')
-					confirmation = strings.TrimSpace(confirmation)
+				fmt.Print("Confirm uninstall current Go version? (y/n): ")
+				confirmation, _ := reader.ReadString('\n')
+				confirmation = strings.TrimSpace(confirmation)
 
-					if confirmation == "y" {
-						proceed = true
-						break
-					}
-
-					if confirmation == "n" {
-						util.PrintWarning("Uninstall aborted by user")
-						return
-					}
-
-					util.PrintError("Invalid option, please type 'y' or 'n'")
-					continue
+				if confirmation == "y" {
+					break
 				}
+
+				if confirmation == "n" {
+					util.PrintWarning("Uninstall aborted by user")
+					return
+				}
+
+				util.PrintError("Invalid option, please type 'y' or 'n'")
+				continue
 			}
 			if err := handler.Handle(
 				ctx,

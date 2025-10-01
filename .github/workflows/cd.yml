@@ -12,7 +12,7 @@ permissions:
     packages: write
 
 env:
-  VERSION: 0.0.4
+  VERSION: 0.0.5
 
 jobs:
 
@@ -39,10 +39,10 @@ jobs:
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        file: ./coverage.out
+        files: ./coverage.out
 
     - name: SonarQube
-      uses: SonarSource/sonarqube-scan-action@v5
+      uses: SonarSource/sonarqube-scan-action@v6
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 

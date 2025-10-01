@@ -18,7 +18,7 @@ trap echo_failed_command EXIT
 
 # Global variables
 export GOVM_HOST="https://github.com/sbonaiva/govm/releases/download"
-export GOVM_VERSION="0.0.4"
+export GOVM_VERSION="0.0.5"
 export GOVM_DIR="$HOME/.govm/bin"
 export GOVM_TMP_DIR="${TMPDIR:-/tmp}/govm"
 

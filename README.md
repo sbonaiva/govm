@@ -33,6 +33,36 @@ cd govm
 make install
 ```
 
+## Package manager publishing (GoReleaser)
+
+GoReleaser is configured to open PRs to the repositories below. Create them
+before running a release so the automation can push updates.
+
+### Winget
+
+- Create `sbonaiva/winget-pkgs` on GitHub.
+- Set the default branch to `main`.
+- Provide a token with repo write permissions to GoReleaser.
+
+### Homebrew Cask
+
+- Create `sbonaiva/homebrew-tap` on GitHub.
+- Set the default branch to `main`.
+- Provide a token with repo write permissions to GoReleaser.
+
+### Nix
+
+- Fork `NixOS/nixpkgs` to `sbonaiva/nixpkgs`.
+- Set the default branch to `main`.
+- Provide a token with repo write permissions to GoReleaser.
+
+## Removing GNU tar (optional)
+
+`govm` currently shells out to `tar` when extracting Go toolchain archives.
+If you want to remove the runtime dependency on GNU tar, replace the external
+`tar` call with Go-native extraction using `archive/tar` and `compress/gzip`,
+then drop `gnutar` from the Nix package dependencies.
+
 ## Usage
 
 ### List

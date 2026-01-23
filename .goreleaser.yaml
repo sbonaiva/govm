@@ -106,11 +106,9 @@ nix:
       description: "Go Version Manager (govm) simplifies the management of Go installations."
       license: "asl20"
 
-      # Mapped from the 'Requirements' section in README.md
+      # Runtime dependency for extraction during install/update
       dependencies:
-          - curl
           - gnutar
-          - gnused
 
       repository:
           owner: sbonaiva

@@ -80,13 +80,12 @@ winget:
           owner: sbonaiva
           name: winget-pkgs
           branch: main
+          token: "{{ .Env.GH_PAT_TOKEN }}"
 
 homebrew_casks:
     - name: govm
       description: "Go Version Manager (govm) simplifies the management of Go installations."
       homepage: "https://github.com/sbonaiva/govm"
-
-
 
       url:
           template: "https://github.com/sbonaiva/govm/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
@@ -99,6 +98,7 @@ homebrew_casks:
           owner: sbonaiva
           name: homebrew-tap
           branch: main
+          token: "{{ .Env.GH_PAT_TOKEN }}"
 
       commit_msg_template: "Brew cask update for {{ .ProjectName }} version {{ .Tag }}"
 
@@ -118,3 +118,4 @@ nix:
           owner: sbonaiva
           name: nixpkgs
           branch: main
+          token: "{{ .Env.GH_PAT_TOKEN }}"

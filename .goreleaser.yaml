@@ -11,6 +11,7 @@ version: 2
 before:
     hooks:
         - go mod tidy
+        - go mod verify
 
 builds:
     - main: ./cmd/govm
@@ -24,7 +25,13 @@ builds:
           - windows
 
 archives:
-    - formats: ["tar.gz", "zip"]
+    - formats:
+        - tar.gz
+      format_overrides:
+        - goos: windows
+          formats:
+            - zip
+    
 
 snapshot:
     version_template: "{{ .Env.VERSION }}"
@@ -72,7 +79,7 @@ winget:
 
       repository:
           owner: sbonaiva
-          name: winget-pkgs # Assuming you will host the manifest in a 'winget-pkgs' repo
+          name: winget-pkgs
           branch: main
 
 homebrew_casks:

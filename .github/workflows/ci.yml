@@ -30,7 +30,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v6
       with:
-        go-version: '1.25.1'
+        go-version: '1.25.6'
 
     - name: Build
       run: make build
@@ -45,7 +45,7 @@ jobs:
         files: ./coverage.out
 
     - name: SonarQube
-      uses: SonarSource/sonarqube-scan-action@v6
+      uses: SonarSource/sonarqube-scan-action@v7
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 

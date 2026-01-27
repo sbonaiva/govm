@@ -38,7 +38,7 @@ changelog:
 
 winget:
     - name: govm
-      publisher: Sandro Bonaiva
+      publisher: sbonaiva
       short_description: "Go Version Manager (govm) simplifies the management of Go installations."
       license: "Apache-2.0"
       publisher_url: https://github.com/sbonaiva
@@ -58,7 +58,7 @@ winget:
           programming language.
 
       license_url: "https://github.com/sbonaiva/govm/blob/main/LICENSE.md"
-      copyright: "Sandro Bonaiva"
+      copyright: "sbonaiva"
       copyright_url: "https://github.com/sbonaiva/govm/blob/main/LICENSE.md"
 
       release_notes: "{{.Changelog}}"

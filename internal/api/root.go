@@ -23,7 +23,7 @@ func NewRootCmd(ctx context.Context, httpGateway gateway.HttpGateway, osGateway 
 			instance = &cobra.Command{
 				Use:     "govm",
 				Short:   "::: Go Version Manager :::",
-				Version: fmt.Sprintf("%s %s/%s", "0.0.5", runtime.GOOS, runtime.GOARCH),
+				Version: fmt.Sprintf("%s %s/%s", "0.0.6", runtime.GOOS, runtime.GOARCH),
 			}
 
 			sharedSvc := service.NewShared(httpGateway, osGateway)

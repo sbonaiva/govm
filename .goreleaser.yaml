@@ -9,28 +9,108 @@
 version: 2
 
 before:
-  hooks:
-    - go mod tidy
+    hooks:
+        - go mod tidy
 
 builds:
-  - main: ./cmd/govm
-    binary: govm
-    ldflags: "-s -w -X main.Version={{.Env.VERSION}}"
-    env:
-      - CGO_ENABLED=0
-    goos:
-      - linux
-      - darwin
+    - main: ./cmd/govm
+      binary: govm
+      ldflags: "-s -w -X main.Version={{.Env.VERSION}}"
+      env:
+          - CGO_ENABLED=0
+      goos:
+          - linux
+          - darwin
+          - windows
 
 archives:
-  - formats: [ 'tar.gz' ]
+    - formats: ["tar.gz"]
 
 snapshot:
-  version_template: "{{ .Env.VERSION }}"
+    version_template: "{{ .Env.VERSION }}"
 
 changelog:
-  sort: asc
-  filters:
-    exclude:
-      - "^docs:"
-      - "^test:"
+    sort: asc
+    filters:
+        exclude:
+            - "^docs:"
+            - "^test:"
+
+winget:
+    - name: govm
+      publisher: Sandro Bonaiva
+      short_description: "Go Version Manager (govm) simplifies the management of Go installations."
+      license: "Apache-2.0"
+      publisher_url: https://github.com/sbonaiva
+      publisher_support_url: "https://github.com/sbonaiva/govm/issues"
+      package_identifier: sbonaiva.govm
+
+      # URL template for downloading the release artifacts from GitHub
+      url_template: "https://github.com/sbonaiva/govm/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+
+      commit_msg_template: "{{ .PackageIdentifier }}: {{ .Tag }}"
+      homepage: "https://github.com/sbonaiva/govm"
+
+      description: |
+          Go Version Manager (govm) is a command-line tool written in Go that simplifies
+          the management of Go installations on your machine. With a few simple commands,
+          you can easily list, install, and uninstall different versions of the Go
+          programming language.
+
+      license_url: "https://github.com/sbonaiva/govm/blob/main/LICENSE.md"
+      copyright: "Sandro Bonaiva"
+      copyright_url: "https://github.com/sbonaiva/govm/blob/main/LICENSE.md"
+
+      release_notes: "{{.Changelog}}"
+      release_notes_url: "https://github.com/sbonaiva/govm/releases/tag/{{.Tag}}"
+
+      tags:
+          - golang
+          - cli
+          - go
+          - version-manager
+
+      repository:
+          owner: sbonaiva
+          name: winget-pkgs # Assuming you will host the manifest in a 'winget-pkgs' repo
+          branch: main
+
+homebrew_casks:
+    - name: govm
+      description: "Go Version Manager (govm) simplifies the management of Go installations."
+      homepage: "https://github.com/sbonaiva/govm"
+
+      binaries:
+          - govm
+
+      url:
+          template: "https://github.com/sbonaiva/govm/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+
+      # Cleanup instructions for when the user uninstalls the cask
+      zap:
+          trash:
+              - "~/.govm"
+
+      repository:
+          owner: sbonaiva
+          name: homebrew-tap
+          branch: main
+
+      commit_msg_template: "Brew cask update for {{ .ProjectName }} version {{ .Tag }}"
+
+nix:
+    - name: govm
+      url_template: "https://github.com/sbonaiva/govm/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+      commit_msg_template: "{{ .ProjectName }}: {{ .Tag }}"
+      homepage: "https://github.com/sbonaiva/govm"
+      description: "Go Version Manager (govm) simplifies the management of Go installations."
+      license: "asl20"
+
+      # Runtime dependency for extraction during install/update
+      dependencies:
+          - gnutar
+
+      repository:
+          owner: sbonaiva
+          name: nixpkgs
+          branch: main

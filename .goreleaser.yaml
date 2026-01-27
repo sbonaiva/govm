@@ -50,12 +50,11 @@ winget:
       publisher_url: https://github.com/sbonaiva
       publisher_support_url: "https://github.com/sbonaiva/govm/issues"
       package_identifier: sbonaiva.govm
-
-      # URL template for downloading the release artifacts from GitHub
       url_template: "https://github.com/sbonaiva/govm/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
 
       commit_msg_template: "{{ .PackageIdentifier }}: {{ .Tag }}"
-      homepage: "https://github.com/sbonaiva/govm"
+      path: "manifests/s/sbonaiva/govm/"
+      homepage: "https://github.com/sbonaiva/govm/{{ .Tag }}"
 
       description: |
           Go Version Manager (govm) is a command-line tool written in Go that simplifies

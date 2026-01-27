@@ -25,8 +25,7 @@ builds:
           - windows
 
 archives:
-    - formats:
-        - tar.gz
+    - formats: ["tar.gz"]
       format_overrides:
         - goos: windows
           formats:
@@ -87,13 +86,11 @@ homebrew_casks:
       description: "Go Version Manager (govm) simplifies the management of Go installations."
       homepage: "https://github.com/sbonaiva/govm"
 
-      binaries:
-          - govm
+
 
       url:
           template: "https://github.com/sbonaiva/govm/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
 
-      # Cleanup instructions for when the user uninstalls the cask
       zap:
           trash:
               - "~/.govm"

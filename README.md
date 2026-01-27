@@ -46,9 +46,10 @@ before running a release so the automation can push updates.
 
 ### Homebrew Cask
 
-- Create `sbonaiva/homebrew-tap` on GitHub.
-- Set the default branch to `main`.
-- Provide a token with repo write permissions to GoReleaser.
+```bash
+brew tap sbonaiva/tap
+brew install --cask govm
+```
 
 ### Nix
 

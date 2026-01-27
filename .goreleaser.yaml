@@ -24,7 +24,7 @@ builds:
           - windows
 
 archives:
-    - formats: ["tar.gz"]
+    - formats: ["tar.gz", "zip"]
 
 snapshot:
     version_template: "{{ .Env.VERSION }}"

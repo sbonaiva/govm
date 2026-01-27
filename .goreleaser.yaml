@@ -108,9 +108,9 @@ nix:
       commit_msg_template: "{{ .ProjectName }}: {{ .Tag }}"
       homepage: "https://github.com/sbonaiva/govm"
       description: "Go Version Manager (govm) simplifies the management of Go installations."
+      path: pkgs/development/tools/govm/default.nix
       license: "asl20"
 
-      # Runtime dependency for extraction during install/update
       dependencies:
           - gnutar
 

@@ -11,9 +11,6 @@ permissions:
     contents: write
     packages: write
 
-env:
-  VERSION: 0.0.6
-
 jobs:
 
   build:

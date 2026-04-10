@@ -175,10 +175,10 @@ govm_tmp_file="$GOVM_TMP_DIR/$govm_tar_file"
 govm_tmp_checksum_file="$GOVM_TMP_DIR/$govm_checksum_file"
 
 echo "Downloading govm installation files..."
-curl --tlsv1.2 -sSf --fail --location --progress-bar "${GOVM_HOST}/$govm_tar_file" > "$govm_tmp_file"
+curl --proto "=https" --tlsv1.2 -sSf --fail --location --progress-bar "${GOVM_HOST}/$govm_tar_file" > "$govm_tmp_file"
 
 echo "Downloading checksum file..."
-curl --tlsv1.2 -sSf --fail --location --progress-bar "${GOVM_HOST}/$govm_checksum_file" > "$govm_tmp_checksum_file"
+curl --proto "=https" --tlsv1.2 -sSf --fail --location --progress-bar "${GOVM_HOST}/$govm_checksum_file" > "$govm_tmp_checksum_file"
 
 echo "Verifying checksum..."
 

@@ -33,6 +33,7 @@ func TestRootCmd(t *testing.T) {
 		"  help        Help about any command\n",
 		"  install     Install a Go version\n",
 		"  list        List all Go versions\n",
+		"  log         Show log info\n",
 		"  uninstall   Uninstall a Go version\n",
 		"  update      Update Go version\n\n",
 		"Flags:\n",

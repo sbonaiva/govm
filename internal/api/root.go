@@ -33,6 +33,7 @@ func NewRootCmd(ctx context.Context, httpGateway gateway.HttpGateway, osGateway 
 				NewInstallCmd(ctx, handler.NewInstall(sharedSvc)),
 				NewUninstallCmd(ctx, handler.NewUninstall(sharedSvc)),
 				NewUpdateCmd(ctx, handler.NewUpdate(sharedSvc)),
+				NewLogCmd(ctx),
 			)
 		}
 	})

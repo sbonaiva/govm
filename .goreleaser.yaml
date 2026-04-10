@@ -50,11 +50,10 @@ winget:
       publisher_url: https://github.com/sbonaiva
       publisher_support_url: "https://github.com/sbonaiva/govm/issues"
       package_identifier: sbonaiva.govm
-
-      # URL template for downloading the release artifacts from GitHub
       url_template: "https://github.com/sbonaiva/govm/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
 
       commit_msg_template: "{{ .PackageIdentifier }}: {{ .Tag }}"
+      path: "manifests/s/sbonaiva/govm/{{ .Tag }}"
       homepage: "https://github.com/sbonaiva/govm"
 
       description: |
@@ -108,9 +107,9 @@ nix:
       commit_msg_template: "{{ .ProjectName }}: {{ .Tag }}"
       homepage: "https://github.com/sbonaiva/govm"
       description: "Go Version Manager (govm) simplifies the management of Go installations."
+      path: pkgs/development/tools/govm/default.nix
       license: "asl20"
 
-      # Runtime dependency for extraction during install/update
       dependencies:
           - gnutar
 

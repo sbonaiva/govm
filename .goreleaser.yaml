@@ -35,6 +35,9 @@ archives:
 snapshot:
     version_template: "{{.Version}}"
 
+checksum:
+  name_template: "{{ .ProjectName }}_checksums.txt"
+
 changelog:
     sort: asc
     filters:

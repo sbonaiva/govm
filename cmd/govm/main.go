@@ -13,13 +13,14 @@ import (
 )
 
 const (
+	logCmd  = "log"
+	logFile = "govm.log"
 	goVersionsURL = "https://go.dev/dl/?mode=json&include=all"
 	goDownloadURL = "https://go.dev/dl/%s"
 )
 
-const (
-	logCmd  = "log"
-	logFile = "govm.log"
+var (
+	Version = "dev"
 )
 
 func main() {
@@ -48,7 +49,7 @@ func main() {
 		GoDownloadURL: goDownloadURL,
 	})
 	osGateway := gateway.NewOsGateway()
-	rootCmd := api.NewRootCmd(ctx, httpGateway, osGateway)
+	rootCmd := api.NewRootCmd(ctx, Version, httpGateway, osGateway)
 
 	if err := rootCmd.Execute(); err != nil {
 		util.PrintError(err.Error())

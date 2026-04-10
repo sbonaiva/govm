@@ -17,7 +17,7 @@ func TestRootCmd(t *testing.T) {
 	// Arrange
 	ctx := context.Background()
 
-	cmd := api.NewRootCmd(ctx, new(gateway.HttpGatewayMock), new(gateway.OsGatewayMock))
+	cmd := api.NewRootCmd(ctx, "dev", new(gateway.HttpGatewayMock), new(gateway.OsGatewayMock))
 
 	// Act
 	actual, err := test.CaptureOutput(func() error {
@@ -45,5 +45,5 @@ func TestRootCmd(t *testing.T) {
 	// Assert
 	assert.NoError(t, err)
 	assert.Equal(t, expected, actual)
-	assert.Equal(t, fmt.Sprintf("0.0.6 %s/%s", runtime.GOOS, runtime.GOARCH), cmd.Version)
+	assert.Equal(t, fmt.Sprintf("dev %s/%s", runtime.GOOS, runtime.GOARCH), cmd.Version)
 }

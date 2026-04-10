@@ -17,13 +17,18 @@ var (
 	once     sync.Once
 )
 
-func NewRootCmd(ctx context.Context, httpGateway gateway.HttpGateway, osGateway gateway.OsGateway) *cobra.Command {
+func NewRootCmd(
+	ctx context.Context,
+	version string,
+	httpGateway gateway.HttpGateway, 
+	osGateway gateway.OsGateway,
+) *cobra.Command {
 	once.Do(func() {
 		if instance == nil {
 			instance = &cobra.Command{
 				Use:     "govm",
 				Short:   "::: Go Version Manager :::",
-				Version: fmt.Sprintf("%s %s/%s", "0.0.6", runtime.GOOS, runtime.GOARCH),
+				Version: fmt.Sprintf("%s %s/%s", version, runtime.GOOS, runtime.GOARCH),
 			}
 
 			sharedSvc := service.NewShared(httpGateway, osGateway)

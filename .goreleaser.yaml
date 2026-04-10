@@ -16,7 +16,7 @@ before:
 builds:
     - main: ./cmd/govm
       binary: govm
-      ldflags: "-s -w -X main.Version={{.Env.VERSION}}"
+      ldflags: "-s -w -X main.Version={{.Version}}"
       env:
           - CGO_ENABLED=0
       goos:
@@ -25,15 +25,15 @@ builds:
           - windows
 
 archives:
-    - formats: ["tar.gz"]
+    - name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+      formats: ["tar.gz"]
       format_overrides:
         - goos: windows
           formats:
             - zip
-    
 
 snapshot:
-    version_template: "{{ .Env.VERSION }}"
+    version_template: "{{.Version}}"
 
 changelog:
     sort: asc

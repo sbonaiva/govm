@@ -17,8 +17,7 @@ echo_failed_command() {
 trap echo_failed_command EXIT
 
 # Global variables
-export GOVM_HOST="https://github.com/sbonaiva/govm/releases/download"
-export GOVM_VERSION="0.0.6"
+export GOVM_HOST="https://github.com/sbonaiva/govm/releases/latest/download"
 export GOVM_DIR="$HOME/.govm/bin"
 export GOVM_TMP_DIR="${TMPDIR:-/tmp}/govm"
 
@@ -170,16 +169,16 @@ if [ "$GOVM_PLATFORM" == "others" ]; then
 fi
 
 echo "Detected platform: $(uname -s) $(uname -m)"
-govm_tar_file="govm_${GOVM_VERSION}_${GOVM_PLATFORM}.tar.gz"
-govm_checksum_file="govm_${GOVM_VERSION}_checksums.txt"
+govm_tar_file="govm_${GOVM_PLATFORM}.tar.gz"
+govm_checksum_file="govm_checksums.txt"
 govm_tmp_file="$GOVM_TMP_DIR/$govm_tar_file"
 govm_tmp_checksum_file="$GOVM_TMP_DIR/$govm_checksum_file"
 
 echo "Downloading govm installation files..."
-curl --fail --location --progress-bar "${GOVM_HOST}/v${GOVM_VERSION}/$govm_tar_file" > "$govm_tmp_file"
+curl --fail --location --progress-bar "${GOVM_HOST}/$govm_tar_file" > "$govm_tmp_file"
 
 echo "Downloading checksum file..."
-curl --fail --location --progress-bar "${GOVM_HOST}/v${GOVM_VERSION}/$govm_checksum_file" > "$govm_tmp_checksum_file"
+curl --fail --location --progress-bar "${GOVM_HOST}/$govm_checksum_file" > "$govm_tmp_checksum_file"
 
 echo "Verifying checksum..."
 

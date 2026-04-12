@@ -1,10 +1,15 @@
 package gateway
 
 import (
+	"archive/tar"
+	"compress/gzip"
 	"errors"
+	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"os/user"
+	"path/filepath"
 	"strings"
 )
 
@@ -79,8 +84,58 @@ func (o *osClient) GetEnv(key string) string {
 	return os.Getenv(key)
 }
 
-func (o *osClient) Untar(source string, target string) error {
-	return exec.Command("tar", "-C", target, "-xzf", source).Run()
+func (o *osClient) Untar(source, target string) error {
+	f, err := os.Open(source)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	gzr, err := gzip.NewReader(f)
+	if err != nil {
+		return err
+	}
+	defer gzr.Close()
+
+	tr := tar.NewReader(gzr)
+
+	for {
+		header, err := tr.Next()
+		if err == io.EOF {
+			break // Fim do arquivo
+		}
+		if err != nil {
+			return err
+		}
+
+		targetPath := filepath.Join(target, header.Name)
+		if !strings.HasPrefix(targetPath, filepath.Clean(target)+string(os.PathSeparator)) {
+			return fmt.Errorf("invalid file path: %s", header.Name)
+		}
+
+		switch header.Typeflag {
+		case tar.TypeDir:
+			if err := os.MkdirAll(targetPath, 0755); err != nil {
+				return err
+			}
+		case tar.TypeReg:
+			if err := os.MkdirAll(filepath.Dir(targetPath), 0755); err != nil {
+				return err
+			}
+
+			outFile, err := os.OpenFile(targetPath, os.O_CREATE|os.O_RDWR, os.FileMode(header.Mode))
+			if err != nil {
+				return err
+			}
+
+			if _, err := io.Copy(outFile, tr); err != nil {
+				outFile.Close()
+				return err
+			}
+			outFile.Close()
+		}
+	}
+	return nil
 }
 
 func (o *osClient) GetInstalledGoVersion() (string, error) {

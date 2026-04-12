@@ -13,16 +13,19 @@ With a few simple commands, you can easily list, install, and uninstall differen
 
 - Linux or macOS
 - Internet connection
-- [curl](https://curl.se/)
-- [tar](https://www.gnu.org/software/tar/)
-- [sed](https://www.gnu.org/software/sed/)
 
 ## Installation
 
 To get started with `govm`, you need to run the following in a terminal:
 
+- cURL
 ```bash
 curl -s "https://raw.githubusercontent.com/sbonaiva/govm/refs/heads/main/scripts/install.sh" | bash
+```
+
+- Wget
+```bash
+wget -qO- "https://raw.githubusercontent.com/sbonaiva/govm/refs/heads/main/scripts/install.sh" | bash
 ```
 
 Alternatively, you can build it from source:
@@ -37,12 +40,6 @@ make install
 
 GoReleaser is configured to open PRs to the repositories below. Create them
 before running a release so the automation can push updates.
-
-### Winget
-
-- Create `sbonaiva/winget-pkgs` on GitHub.
-- Set the default branch to `main`.
-- Provide a token with repo write permissions to GoReleaser.
 
 ### Homebrew Cask
 
@@ -114,7 +111,7 @@ If you encounter any issues while using the application, please follow these ste
 The first step in troubleshooting is to review the log file for any errors or warnings. You can do this by running the following command in your terminal:
 
 ```bash
-cat ~/.govm/govm.log
+govm log
 ```
 
 This will display the contents of the log file, which may provide insight into what went wrong.

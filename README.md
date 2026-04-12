@@ -16,50 +16,45 @@ With a few simple commands, you can easily list, install, and uninstall differen
 
 ## Installation
 
-To get started with `govm`, you need to run the following in a terminal:
+**Go Version Manager (govm)** can be installed using a shell script, built from source, or via package managers.
 
-- cURL
+### Quick Install (Shell)
+
+The easiest way to install govm is via our installation script.
+
 ```bash
 curl -s "https://raw.githubusercontent.com/sbonaiva/govm/refs/heads/main/scripts/install.sh" | bash
 ```
 
-- Wget
-```bash
-wget -qO- "https://raw.githubusercontent.com/sbonaiva/govm/refs/heads/main/scripts/install.sh" | bash
-```
+### Package managers
 
-Alternatively, you can build it from source:
-
-```bash
-git clone https://github.com/sbonaiva/govm.git
-cd govm
-make install
-```
-
-## Package manager publishing (GoReleaser)
-
-GoReleaser is configured to open PRs to the repositories below. Create them
-before running a release so the automation can push updates.
-
-### Homebrew Cask
+#### Homebrew Cask
 
 ```bash
 brew tap sbonaiva/tap
 brew install --cask govm
 ```
 
-### Nix
+#### Nix
 
 - Fork `NixOS/nixpkgs` to `sbonaiva/nixpkgs`.
 - Set the default branch to `main`.
 - Provide a token with repo write permissions to GoReleaser.
 
-## Removing GNU tar (optional)
+### Building from Source
 
-`govm` currently shells out to `tar` when extracting Go toolchain archives.
-If you want to remove the runtime dependency on GNU tar, replace the external
-`tar` call with Go-native extraction using `archive/tar` and `compress/gzip`,
-then drop `gnutar` from the Nix package dependencies.
+If you prefer to build the binary manually, ensure you have Go installed:
+
+1. Clone the repository:
+```bash
+git clone https://github.com/sbonaiva/govm.git
+cd govm
+```
+
+2. Build and install:
+```bash
+make install
+```
 
 ## Usage
 
